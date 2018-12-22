@@ -34,6 +34,7 @@
 /**********************************************************************************************************************
  * HEADER FILES
  *********************************************************************************************************************/
+#include <stdio.h>
 #include "pal_gpio.h"
 #include "driver/gpio.h"
 
@@ -66,10 +67,13 @@
 */
 void pal_gpio_set_high(const pal_gpio_t* p_gpio_context)
 {
+    printf(">pal_gpio_set_high()\r\n");
 	if ((p_gpio_context != NULL) && (p_gpio_context->p_gpio_hw != NULL))     
     {
+        printf("gpio_set_level=high\r\n");
 		gpio_set_level((gpio_num_t)p_gpio_context->p_gpio_hw, 1);
 	}
+    printf("<pal_gpio_set_high()\r\n");
 }
 
 /**
@@ -84,10 +88,13 @@ void pal_gpio_set_high(const pal_gpio_t* p_gpio_context)
 */
 void pal_gpio_set_low(const pal_gpio_t* p_gpio_context)
 {
+    printf(">pal_gpio_set_low()\r\n");
     if ((p_gpio_context != NULL) && (p_gpio_context->p_gpio_hw != NULL))     
     {
+        printf("gpio_set_level=low\r\n");
         gpio_set_level((gpio_num_t)p_gpio_context->p_gpio_hw, 0);
     }
+    printf("<pal_gpio_set_low()\r\n");
 }
 
 /**
