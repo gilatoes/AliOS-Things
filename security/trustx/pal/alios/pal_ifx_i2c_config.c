@@ -36,7 +36,15 @@
 #include "pal_gpio.h"
 #include "pal_i2c.h"
 //#TODO
+#include "hal/soc/soc.h"
+
 //#include "driver/i2c.h"
+//#include "hal/soc/i2c.h"
+//#include "driver/periph_ctrl.h"
+//#include "soc/i2c_reg.h"
+//#include "soc/i2c_struct.h"
+//#include "soc/dport_reg.h"
+//#include "driver/gpio.h"
 
 /*********************************************************************************************************************
  * pal ifx i2c instance
@@ -46,7 +54,6 @@
 #define PAL_I2C_MASTER_NUM              0       /*!< I2C port number for master dev */
 #define PAL_I2C_MASTER_FREQ_HZ          400000           /*!< I2C master clock frequency */
 
-#if 1
 typedef struct esp32_i2c_ctx {
 	uint8_t  port;
 	uint8_t	 scl_io;
@@ -60,9 +67,7 @@ esp32_i2c_ctx_t	 esp32_i2c_ctx_0 = {PAL_I2C_MASTER_NUM,
 									PAL_I2C_MASTER_FREQ_HZ};
 
 esp32_i2c_ctx_t esp32_i2c_ctx_0;
-#endif
 
-#if 1
 /**
  * \brief PAL I2C configuration for OPTIGA. 
  */
@@ -98,7 +103,6 @@ pal_gpio_t optiga_reset_0 =
     // Platform specific GPIO context for the pin used to toggle Reset.
     (void*)18
 };
-#endif
 
 /**
 * @}

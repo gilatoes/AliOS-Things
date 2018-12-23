@@ -42,6 +42,9 @@
 #include "pal.h"
 #include "stdio.h"
 
+#include <aos/kernel.h>
+#include <aos/aos.h>
+
 /**********************************************************************************************************************
  * MACROS
  *********************************************************************************************************************/
@@ -179,6 +182,10 @@ pal_status_t pal_os_event_init(void)
 				&xHandle );      /* Used to pass out the created task's handle. */
 #endif
 
+//xTimerCreate->aos_timer_new
+//xQueueCreate->aos_queue_new
+//xTaskCreate->krhino_task_dyn_create
+
 	return PAL_STATUS_SUCCESS;
 }
 /**
@@ -243,6 +250,8 @@ void pal_os_event_delayms(uint32_t time_ms)
 	const TickType_t xDelay = time_ms / portTICK_PERIOD_MS;
 	vTaskDelay(xDelay);
 #endif	
+
+	aos_msleep(time_ms);
 }
 
 /**

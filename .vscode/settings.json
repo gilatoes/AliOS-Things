@@ -3,5 +3,15 @@
     "aliosStudio.hardware.board": "esp32devkitc",
     "aliosStudio.name": "hellotrustx",
     "aliosStudio.isAosSource": true,
-    "aliosStudio.sdkPath": "${workspaceRoot}"
+    "aliosStudio.sdkPath": "${workspaceRoot}",
+    "aliosStudio.comPort": "COM11",
+    "aliosStudio.hardware.baudrate": 115200,
+    "files.associations": {
+        "pal.h": "c",
+        "ifx_i2c.h": "c",
+        "aos.h": "c",
+        "pal_gpio.h": "c",
+        "i2c.h": "c",
+        "periph_ctrl.h": "c"
+    }
 }

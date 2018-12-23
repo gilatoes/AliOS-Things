@@ -34,9 +34,12 @@
  * HEADER FILES
  *********************************************************************************************************************/
 #include "pal_os_timer.h"
+#include "stdio.h"
+#include <aos/kernel.h>
+#include <aos/aos.h>
+
 //#include "FreeRTOS.h"
 //#include "task.h"
-#include "stdio.h"
 /**********************************************************************************************************************
  * MACROS
  *********************************************************************************************************************/
@@ -66,7 +69,8 @@ uint32_t pal_os_timer_get_time_in_milliseconds(void)
 {
     //return xTaskGetTickCount();
 	//#TODO:
-	return 0;
+	
+	return krhino_sys_tick_get();
 }
 
 /**
@@ -79,6 +83,8 @@ void pal_os_timer_delay_in_milliseconds(uint16_t milliseconds)
 {
 	if (milliseconds < 10)
 		milliseconds = 10;
+
+		aos_msleep(milliseconds);
 
     //#TODO:
    // const TickType_t xDelay = pdMS_TO_TICKS(milliseconds);

@@ -24,15 +24,16 @@
 //GPIO 18 is used to control Trust X reset pin
 #define GPIO_OUTPUT_IO_OTX_RST    18
 
-gpio_dev_t trustx_reset;
+static gpio_dev_t trustx_reset;
 
 pal_gpio_t* trustx_reset_context;
 
-static int32_t optiga_init(void);
+static int32_t optiga_init(void); 
 optiga_comms_t optiga_comms = {(void*)&ifx_i2c_context_0, NULL, NULL, 0};
 static host_lib_status_t optiga_comms_status;
+void gpio_init(void);
 
-void init_gpio()
+void gpio_init(void)
 {
     /* gpio port config */
     trustx_reset.port = GPIO_OUTPUT_IO_OTX_RST;
@@ -120,11 +121,9 @@ int application_start(int argc, char *argv[])
 {        
     LOG(">application started()");
     printf("Trust X Library:%s\r\n", VERSION_HOST_LIBRARY);
-
+	gpio_init();
     optiga_init();
 
-    
-   
     aos_post_delayed_action(5000, app_delayed_action, NULL);
     aos_loop_run();
 
