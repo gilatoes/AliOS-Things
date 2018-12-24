@@ -22,7 +22,9 @@ GLOBAL_INCLUDES     += $(LIBTRUSTX)/optiga/include/optiga/common
 GLOBAL_INCLUDES     += $(LIBTRUSTX)/optiga/include/optiga/cmd
 GLOBAL_INCLUDES     += $(LIBTRUSTX)/optiga/include/optiga/comms
 GLOBAL_INCLUDES     += $(LIBTRUSTX)/optiga/include/optiga/ifx_i2c
+ifeq ($(ENABLE_DTLS), yes)
 GLOBAL_INCLUDES     += $(LIBTRUSTX)/optiga/include/optiga/dtls
+endif
 
 $(NAME)_SOURCES     += 	$(LIBTRUSTX)/pal/alios/pal_gpio.c
 $(NAME)_SOURCES     +=  $(LIBTRUSTX)/pal/alios/pal_os_timer.c

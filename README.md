@@ -24,6 +24,44 @@ AliOS Things is Alibaba's IoT version of AliOS Family, it was announced in [The 
 }
 ```
 
+
+## ESP32 Upload configuration
+<code_base>\build\site_scons\upload\esp32.json
+
+Change @PORT@ to esp32 COM#.
+
+```
+{
+    "cmd": [
+        "esptool.py",
+        "--chip",
+        "esp32",
+        "--port",
+        "@PORT@",
+        "--baud",
+        "921600",
+        "--before",
+        "default_reset",
+        "--after",
+        "hard_reset",
+        "write_flash",
+        "-z",
+        "--flash_mode",
+        "dio",
+        "--flash_freq",
+        "40m",
+        "--flash_size",
+        "detect",
+        "0x1000",
+        "@AOSROOT@/platform/mcu/esp32/bsp/bootloader.bin",
+        "0x8000",
+        "@AOSROOT@/platform/mcu/esp32/bsp/custom_partitions.bin",
+        "0x10000",
+        "@AOSROOT@/out/@TARGET@/binary/@TARGET@.bin"
+    ]
+}
+```
+
 ## Architecture Overview
 
 AliOS Things supports multiple architectures, including ARM, C-Sky, MIPS, rl78, rx600 and xtensa, AliOS Things also supports a large number of [boards](./board/README.md).

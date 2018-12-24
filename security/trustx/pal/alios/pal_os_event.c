@@ -37,6 +37,7 @@
 //#include "FreeRTOS.h"
 //#include "timers.h"
 //#include "queue.h"
+
 #include "pal.h"
 #include "pal_os_event.h"
 #include "pal.h"
@@ -45,10 +46,17 @@
 #include <aos/kernel.h>
 #include <aos/aos.h>
 
+#include <hal/soc/timer.h>
+
+#include <k_api.h> //rhino API
+
 /**********************************************************************************************************************
  * MACROS
  *********************************************************************************************************************/
 #define MAX_CALLBACKS	5
+
+#define DEMO_TASK_STACKSIZE    64 //256*cpu_stack_t = 1024byte
+#define DEMO_TASK_PRIORITY     20
 /*********************************************************************************************************************
  * LOCAL DATA
  *********************************************************************************************************************/
@@ -63,7 +71,10 @@ typedef struct callbacks {
 
 //#TODO
 //static TimerHandle_t otxTimer[MAX_CALLBACKS];
-//static pal_os_event_clbs_t clbs[MAX_CALLBACKS];
+static pal_os_event_clbs_t clbs[MAX_CALLBACKS];
+
+static ktask_t demo_task_obj;
+cpu_stack_t demo_task_buf[DEMO_TASK_STACKSIZE];
 
 //#TODO
 //QueueHandle_t xQueueCallbacks;
@@ -105,6 +116,9 @@ void vTimerCallback( TimerHandle_t xTimer )
 }
 #endif
 
+void vTimerCallback( void )
+{}
+
 /// @endcond
 
 void vTaskCallbackHandler( void * pvParameters )
@@ -130,7 +144,24 @@ void vTaskCallbackHandler( void * pvParameters )
 	//} while(1);
 }
 
+void demo_task(void *arg)
+{
 
+    int count = 0;
+
+    printf("demo_task here!\n");
+    printf("rhino memory is %d!\n", krhino_global_space_get());
+#if 0
+    while (1)
+    {
+
+        printf("hello world! count %d\n", count++);
+  
+        //sleep 1 second
+        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
+    };
+#endif	
+}
 /**
 * Platform specific event init function.
 * <br>
@@ -142,6 +173,16 @@ void vTaskCallbackHandler( void * pvParameters )
 */
 pal_status_t pal_os_event_init(void)
 {
+	printf(">pal_os_event_init()\r\n");
+
+	timer_dev_t tasktimer;
+
+	  tasktimer.config.reload_mode = TIMER_RELOAD_AUTO;
+	  tasktimer.config.period = 1000000;
+	  tasktimer.config.cb = &vTimerCallback;//tasktimer.port = PORT_TIMER3;
+
+	//hal_timer_init(&tasktimer);
+
 #if 0	
 	uint8_t i = 0;
 	char tmr_name[10];
@@ -182,10 +223,27 @@ pal_status_t pal_os_event_init(void)
 				&xHandle );      /* Used to pass out the created task's handle. */
 #endif
 
-//xTimerCreate->aos_timer_new
-//xQueueCreate->aos_queue_new
-//xTaskCreate->krhino_task_dyn_create
+	krhino_task_create(&demo_task_obj, "demo_task", 0,DEMO_TASK_PRIORITY, 50, demo_task_buf, DEMO_TASK_STACKSIZE, demo_task, 1);
 
+//xTimerCreate->aos_timer_new
+//int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *), void *arg, int ms, int repeat)
+//This function will create a timer.
+//[in] 	timer 	pointer to the timer.
+//[in] 	fn 	callback of the timer.
+//[in] 	arg 	the argument of the callback.
+//[in] 	ms 	ms of the normal timer triger.
+//[in] 	repeat 	repeat or not when the timer is created.
+
+//xTimerCreate->krhino_timer_dyn_create
+//kstat_t krhino_timer_dyn_create(ktimer_t **timer, const name_t *name, timer_cb_t cb, sys_time_t first, sys_time_t round, void *arg, uint8_t auto_run)
+
+//xQueueCreate->aos_queue_new
+
+//xTaskCreate->krhino_task_dyn_create
+//Refer to rhinorun.c appexample
+//krhino_task_create(&demo_task_obj, "demo_task", 0,DEMO_TASK_PRIORITY, 50, demo_task_buf, DEMO_TASK_STACKSIZE, demo_task, 1);
+
+	printf("<pal_os_event_init()\r\n");
 	return PAL_STATUS_SUCCESS;
 }
 /**

@@ -4,7 +4,7 @@
     "aliosStudio.name": "hellotrustx",
     "aliosStudio.isAosSource": true,
     "aliosStudio.sdkPath": "${workspaceRoot}",
-    "aliosStudio.comPort": "COM11",
+    "aliosStudio.comPort": "COM8",
     "aliosStudio.hardware.baudrate": 115200,
     "files.associations": {
         "pal.h": "c",
@@ -12,6 +12,10 @@
         "aos.h": "c",
         "pal_gpio.h": "c",
         "i2c.h": "c",
-        "periph_ctrl.h": "c"
+        "periph_ctrl.h": "c",
+        "pal_os_event.h": "c",
+        "k_api.h": "c",
+        "timer.h": "c",
+        "hal.h": "c"
     }
 }

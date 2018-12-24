@@ -38,6 +38,8 @@
 #include <aos/kernel.h>
 #include <aos/aos.h>
 
+#include <k_api.h>
+
 //#include "FreeRTOS.h"
 //#include "task.h"
 /**********************************************************************************************************************

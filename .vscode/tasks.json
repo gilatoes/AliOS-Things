@@ -31,7 +31,7 @@
       "command": "aos",
       "args": [
         "monitor",
-        "COM11",
+        "COM8",
         "115200"
       ],
       "presentation": {
