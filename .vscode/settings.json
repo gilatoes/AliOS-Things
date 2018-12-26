@@ -16,6 +16,11 @@
         "pal_os_event.h": "c",
         "k_api.h": "c",
         "timer.h": "c",
-        "hal.h": "c"
+        "hal.h": "c",
+        "vfs_device.h": "c",
+        "vfs_gpio.h": "c",
+        "vfs_register.h": "c",
+        "soc.h": "c",
+        "gpio.h": "c"
     }
 }

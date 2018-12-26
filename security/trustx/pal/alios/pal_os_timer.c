@@ -63,30 +63,37 @@
 
 /**
 * Get the current time in milliseconds<br>
-*
+* 得到任务的当前tick值
 *
 * \retval  uint32_t time in milliseconds
 */
 uint32_t pal_os_timer_get_time_in_milliseconds(void)
 {
-    //return xTaskGetTickCount();
-	//#TODO:
-	
 	return krhino_sys_tick_get();
 }
 
 /**
 * Waits or delays until the given milliseconds time
-* 
+* 任务睡眠多少ticks
+*
 * \param[in] milliseconds Delay value in milliseconds
 *
 */
 void pal_os_timer_delay_in_milliseconds(uint16_t milliseconds)
 {
+
+//AliOS supports 2 methods of timer configuration
+#if 1
+	aos_msleep(milliseconds);
+#else
 	if (milliseconds < 10)
 		milliseconds = 10;
-
-		aos_msleep(milliseconds);
+	
+	//milliseconds to tick
+	uint64_t dtick = milliseconds * RHINO_CONFIG_TICKS_PER_SECOND / 1000L;
+	//krhino_task_sleep(dtick);
+	krhino_task_sleep(1);
+#endif
 
     //#TODO:
    // const TickType_t xDelay = pdMS_TO_TICKS(milliseconds);

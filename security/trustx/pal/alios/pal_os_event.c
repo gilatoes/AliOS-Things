@@ -223,7 +223,7 @@ pal_status_t pal_os_event_init(void)
 				&xHandle );      /* Used to pass out the created task's handle. */
 #endif
 
-	krhino_task_create(&demo_task_obj, "demo_task", 0,DEMO_TASK_PRIORITY, 50, demo_task_buf, DEMO_TASK_STACKSIZE, demo_task, 1);
+	//krhino_task_create(&demo_task_obj, "demo_task", 0,DEMO_TASK_PRIORITY, 50, demo_task_buf, DEMO_TASK_STACKSIZE, demo_task, 1);
 
 //xTimerCreate->aos_timer_new
 //int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *), void *arg, int ms, int repeat)
