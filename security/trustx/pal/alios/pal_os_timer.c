@@ -45,7 +45,11 @@
 /**********************************************************************************************************************
  * MACROS
  *********************************************************************************************************************/
- 
+ #define MSEC_TO_TICK(msec) \
+    ((uint32_t)(msec) * (uint32_t)RHINO_CONFIG_TICKS_PER_SECOND / 1000uL)
+
+#define TICKS_TO_MSEC(tick) ((tick)*1000uL / (uint32_t)RHINO_CONFIG_TICKS_PER_SECOND)
+
 /// @cond hidden 
 /*********************************************************************************************************************
  * LOCAL DATA
@@ -63,13 +67,18 @@
 
 /**
 * Get the current time in milliseconds<br>
-* 得到任务的当前tick值
+* 
 *
 * \retval  uint32_t time in milliseconds
 */
 uint32_t pal_os_timer_get_time_in_milliseconds(void)
 {
-	return krhino_sys_tick_get();
+	sys_time_t ticks;
+	
+	//得到任务的当前tick值
+    ticks = krhino_sys_tick_get();
+
+	return TICKS_TO_MSEC(ticks);
 }
 
 /**
@@ -83,16 +92,24 @@ void pal_os_timer_delay_in_milliseconds(uint16_t milliseconds)
 {
 
 //AliOS supports 2 methods of timer configuration
-#if 1
-	aos_msleep(milliseconds);
-#else
+#if 0
+	//Minimum sleep period is 10ms
+	//Sleep period will round up to the nearest 10ms. eg. input of 31ms will be rounded up to 40ms.
 	if (milliseconds < 10)
 		milliseconds = 10;
-	
+	aos_msleep(milliseconds);
+#else
+		
 	//milliseconds to tick
-	uint64_t dtick = milliseconds * RHINO_CONFIG_TICKS_PER_SECOND / 1000L;
+	//Sleep period will round down to the nearest 10ms. eg. input of 31ms will be rounded up to 40ms.
+	uint64_t dtick = MSEC_TO_TICK(milliseconds);
+
+	if(dtick==0)
+		return;
+
+	//uint64_t dtick = milliseconds * RHINO_CONFIG_TICKS_PER_SECOND / 1000L;
 	//krhino_task_sleep(dtick);
-	krhino_task_sleep(1);
+	krhino_task_sleep(dtick);
 #endif
 
     //#TODO:

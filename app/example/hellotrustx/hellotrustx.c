@@ -135,6 +135,7 @@ int application_start(int argc, char *argv[])
 
     LOG(">application started()");
     printf("Trust X Library:%s\r\n", VERSION_HOST_LIBRARY);
+	printf("\n\nImage: %s %s\n", __DATE__, __TIME__);
 
 //Simple GPIO test routines
 #if (ENABLE_GPIO_TEST == 1)
@@ -148,7 +149,7 @@ int application_start(int argc, char *argv[])
 	}
 
 	printf("Open GPIO driver\r\n");
-	int fd_gpio = aos_open(gpio_path,0);
+	int fd_gpio = aos_open(gpio_path,0); 
 	if(fd_gpio < AOS_CONFIG_VFS_FD_OFFSET){
 		printf("failed to open gpio device driver, ret=%d\r\n", fd_gpio);
 		while(1){};
@@ -200,15 +201,22 @@ int application_start(int argc, char *argv[])
 //Simple timer test routines
 #if (ENABLE_TIMER_TEST == 1)
 
-	uint32_t time_in_tick = 0;
-	time_in_tick = pal_os_timer_get_time_in_milliseconds();
-	printf("Time in tick:%d\r\n", time_in_tick);
+	uint32_t time_in_ms = 0;
+	time_in_ms = pal_os_timer_get_time_in_milliseconds();
+	printf("Start time: %d ms\r\n", time_in_ms);
+	time_in_ms=0;
 
-	gpio_init();
+	pal_os_timer_delay_in_milliseconds(30);
 
-	hal_gpio_output_low(&trustx_reset);
-	pal_os_timer_delay_in_milliseconds(500);
-	hal_gpio_output_high(&trustx_reset);
+	time_in_ms = pal_os_timer_get_time_in_milliseconds();
+	printf("Running time 1: %d ms\r\n", time_in_ms);
+	time_in_ms=0;
+
+	pal_os_timer_delay_in_milliseconds(35);
+	
+	time_in_ms = pal_os_timer_get_time_in_milliseconds();
+	printf("Running time 2: %d ms\r\n", time_in_ms);
+	time_in_ms=0;
 
 #endif
     //aos_post_delayed_action(5000, app_delayed_action, NULL);
