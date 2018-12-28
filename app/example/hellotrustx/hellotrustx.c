@@ -11,8 +11,9 @@
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_register.h>
-
 #include <vfs_gpio.h>
+
+//#include "driver/gpio.h"
 
 //#include <gpio.h>
 //#include <../../../platform/mcu/esp32/bsp/include/driver/include/driver/gpio.h>
@@ -30,11 +31,24 @@
 #include "trustx/optiga/include/optiga/pal/pal_os_event.h"
 #include "trustx/optiga/include/optiga/ifx_i2c/ifx_i2c.h"
 
+//Independent AliOS test routines
+#define ENABLE_GPIO_TEST              0
 //When VFS interface is enabled, a unified user interface for various files (including device files and system files) is enabled.
 //Otherwise, the application will access directly to the HAL layer
-#define ENABLE_VFS_INTERFACE    0
-#define ENABLE_GPIO_TEST        0
-#define ENABLE_TIMER_TEST       1
+#define ENABLE_VFS_INTERFACE          0
+#define ENABLE_TIMER_TEST             0
+#define ENABLE_EVENT_TIMER_TEST       0
+#define ENABLE_NEW_TASK_TEST          0
+#define ENABLE_QUEUE_TEST             1
+
+void timer_test(void);
+void gpio_test(void);
+void event_timer_test(void);
+void new_task_test(void);
+void queue_test(void);
+
+//Timer
+aos_timer_t event_timer;
 
 //GPIO 18 is used to control Trust X reset pin
 #define GPIO_IO_TRUSTX_RST    U1RTS_OUT_IDX
@@ -135,10 +149,213 @@ int application_start(int argc, char *argv[])
 
     LOG(">application started()");
     printf("Trust X Library:%s\r\n", VERSION_HOST_LIBRARY);
-	printf("\n\nImage: %s %s\n", __DATE__, __TIME__);
+	printf("*************************************\n");
+	printf("Compiled time: %s %s\n", __DATE__, __TIME__);
+	printf("*************************************\n");
 
-//Simple GPIO test routines
-#if (ENABLE_GPIO_TEST == 1)
+	printf("Task name: %s\r\n", aos_task_name());
+
+#if (ENABLE_TIMER_TEST == 1)
+	timer_test();
+#endif	
+#if (ENABLE_GPIO_TEST == 1)	
+	gpio_test();
+#endif	
+#if (ENABLE_EVENT_TIMER_TEST == 1)	
+	event_timer_test();
+#endif
+#if (ENABLE_NEW_TASK_TEST == 1)	
+	new_task_test();
+#endif
+
+#if (ENABLE_QUEUE_TEST == 1)	
+	queue_test();
+#endif
+
+	gpio_init();
+	optiga_init();	
+
+    //aos_post_delayed_action(5000, app_delayed_action, NULL);
+    //aos_loop_run();
+
+    return 0;
+}
+
+#define TEST_CONFIG_SYNC_TIMES                  (100000)
+#define TEST_CONFIG_QUEUE_BUF_SIZE              (32)
+static char         queue_buf[TEST_CONFIG_QUEUE_BUF_SIZE];
+static aos_queue_t  g_queue1;
+static char         queue1_buf[TEST_CONFIG_QUEUE_BUF_SIZE];
+static aos_queue_t  g_queue2;
+static char         queue2_buf[TEST_CONFIG_QUEUE_BUF_SIZE];
+static aos_queue_t  g_queue3;
+static char         queue3_buf[TEST_CONFIG_QUEUE_BUF_SIZE];
+/* task: g_queue1 -> g_queue2 */
+static void task8(void *arg)
+{
+    int msg = -1;
+    unsigned int size = 0;
+
+    while(1) {
+        aos_queue_recv(&g_queue1, -1, &msg, &size);
+        aos_queue_send(&g_queue2, &msg, size);
+        if(msg == TEST_CONFIG_SYNC_TIMES) {
+            break;
+        }
+    }
+    //cut_printf("%s exit!\r\n", aos_task_name());
+    aos_task_exit(0);
+}
+
+/* task: g_queue2 -> g_queue3 */
+static void task9(void *arg)
+{
+    int msg = -1;
+    unsigned int size = 0;
+
+    while(1) {
+        aos_queue_recv(&g_queue2, -1, &msg, &size);
+        aos_queue_send(&g_queue3, &msg, size);
+        if(msg == TEST_CONFIG_SYNC_TIMES) {
+            break;
+        }
+    }
+    //cut_printf("%s exit!\r\n", aos_task_name());
+    aos_task_exit(0);
+}
+ 
+void queue_test(void)
+{
+	 int          ret = -1;
+    unsigned int stack_size = 512;
+    unsigned int msg_send = 0;
+    unsigned int msg_recv = 0;
+    unsigned int size_send = sizeof(msg_send);
+    unsigned int size_recv = 0;
+    int i = 0;
+
+	printf(">queue_test()\r\n");
+
+    ret = aos_queue_new(&g_queue1, queue1_buf, TEST_CONFIG_QUEUE_BUF_SIZE, TEST_CONFIG_QUEUE_BUF_SIZE);
+    ret = aos_queue_new(&g_queue2, queue2_buf, TEST_CONFIG_QUEUE_BUF_SIZE, TEST_CONFIG_QUEUE_BUF_SIZE);
+    ret = aos_queue_new(&g_queue3, queue3_buf, TEST_CONFIG_QUEUE_BUF_SIZE, TEST_CONFIG_QUEUE_BUF_SIZE);
+
+    ret = aos_task_new("task8", task8, NULL, stack_size);
+    ret = aos_task_new("task9", task9, NULL, stack_size);
+
+    for(i=1; i<=TEST_CONFIG_SYNC_TIMES; i++) {
+        msg_send = i;
+        ret = aos_queue_send(&g_queue1, &msg_send, size_send);
+        ret = aos_queue_recv(&g_queue3, -1, &msg_recv, &size_recv);
+        //ASSERT_EQ(ret, 0);
+        //ASSERT_EQ(msg_send, msg_recv);
+        //ASSERT_EQ(size_send, size_recv);
+        if(i%(TEST_CONFIG_SYNC_TIMES/10) == 0) {
+			printf("%d/%d\r\n", i, TEST_CONFIG_SYNC_TIMES);
+        }
+    }
+    //ASSERT_EQ(msg_recv, TEST_CONFIG_SYNC_TIMES);
+
+	printf("queue_test completed\r\n");
+
+    aos_queue_free(&g_queue1);
+    aos_queue_free(&g_queue2);
+    aos_queue_free(&g_queue3);
+    aos_task_exit(0);
+}
+
+static aos_sem_t    g_sem_taskexit_sync; 
+static int task1_counter = 0;
+
+static void task1(void *arg)
+{
+    int i=0;
+	for(i=0;i<10;i++){
+		task1_counter++;
+	}
+    aos_sem_signal(&g_sem_taskexit_sync);
+    aos_task_exit(0);
+}
+
+void new_task_test(void)
+{
+	unsigned int stack_size = 1024;
+    int ret = -1;
+
+	printf(">new_task_test()\r\n");
+
+    aos_sem_new(&g_sem_taskexit_sync, 0);
+
+    ret = aos_task_new("task1", task1, NULL, stack_size);
+
+    aos_sem_wait(&g_sem_taskexit_sync, -1);
+    printf("task1 exit!\r\n");
+
+	printf("newtask completed. event_counter = %d\r\n", task1_counter );	
+
+    aos_sem_free(&g_sem_taskexit_sync);
+    aos_task_exit(0);
+}
+
+static aos_sem_t    event_complete_flag;
+static int event_counter = 0;
+
+static void event_handler(void *arg, void *arg2)
+{
+	if(event_counter==10){
+		aos_sem_signal(&event_complete_flag);	
+	}else{
+		event_counter++;
+	}
+}
+
+void event_timer_test()
+{
+	int ret = -1;
+	int repeat=1;
+
+	printf(">event_timer_test()\r\n");
+	ret = aos_sem_new(&event_complete_flag, 0);
+	
+	//动态创建软件定时器
+    ret = aos_timer_new(&event_timer, event_handler, NULL, 100, repeat);
+	
+	aos_sem_wait(&event_complete_flag, -1);
+    aos_sem_free(&event_complete_flag);
+
+	aos_timer_stop(&event_timer);
+    aos_timer_free(&event_timer);
+
+	printf("Event completed. event_counter = %d\r\n", event_counter);	
+}
+ 
+void timer_test(void)
+{
+	uint32_t time_in_ms = 0;
+	time_in_ms = pal_os_timer_get_time_in_milliseconds();
+	printf("App Start time: %d ms\r\n", time_in_ms);
+	
+	pal_os_timer_delay_in_milliseconds(20);
+
+	time_in_ms=0;
+	time_in_ms = pal_os_timer_get_time_in_milliseconds();
+	printf("Run time 1: %d ms\r\n", time_in_ms);
+	
+	pal_os_timer_delay_in_milliseconds(50); 
+	
+	time_in_ms=0;
+	time_in_ms = pal_os_timer_get_time_in_milliseconds();
+	printf("Run time 2: %d ms\r\n", time_in_ms);
+
+	pal_os_timer_delay_in_milliseconds(100);
+
+	time_in_ms=0;
+	time_in_ms = pal_os_timer_get_time_in_milliseconds();
+	printf("Run time 3: %d ms\r\n", time_in_ms);
+}
+
+void gpio_test(void)
+{
 #if (ENABLE_VFS_INTERFACE == 1)	
 	char* gpio_path = "/dev/gpio/";
 	printf("Register GPIO driver\r\n"); //Default GPIO is high
@@ -185,7 +402,7 @@ int application_start(int argc, char *argv[])
 	//Direct access to the GPIO HAL layer
 	gpio_init();
 
-#if 0
+#if 1
 	//Toggle GPIO (On ESP32, takes 9.31ms)
 	hal_gpio_output_toggle(&trustx_reset);
 #else	
@@ -193,34 +410,8 @@ int application_start(int argc, char *argv[])
 	//Set GPIO low
 	hal_gpio_output_low(&trustx_reset);
 	//Set GPIO high
-    hal_gpio_output_high(&trustx_reset);
+    hal_gpio_output_high(&trustx_reset);	
+	hal_gpio_finalize(&trustx_reset);
 #endif	
 #endif
-#endif
-
-//Simple timer test routines
-#if (ENABLE_TIMER_TEST == 1)
-
-	uint32_t time_in_ms = 0;
-	time_in_ms = pal_os_timer_get_time_in_milliseconds();
-	printf("Start time: %d ms\r\n", time_in_ms);
-	time_in_ms=0;
-
-	pal_os_timer_delay_in_milliseconds(30);
-
-	time_in_ms = pal_os_timer_get_time_in_milliseconds();
-	printf("Running time 1: %d ms\r\n", time_in_ms);
-	time_in_ms=0;
-
-	pal_os_timer_delay_in_milliseconds(35);
-	
-	time_in_ms = pal_os_timer_get_time_in_milliseconds();
-	printf("Running time 2: %d ms\r\n", time_in_ms);
-	time_in_ms=0;
-
-#endif
-    //aos_post_delayed_action(5000, app_delayed_action, NULL);
-    //aos_loop_run();
-
-    return 0;
 }

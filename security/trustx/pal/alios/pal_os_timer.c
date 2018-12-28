@@ -40,8 +40,6 @@
 
 #include <k_api.h>
 
-//#include "FreeRTOS.h"
-//#include "task.h"
 /**********************************************************************************************************************
  * MACROS
  *********************************************************************************************************************/
@@ -49,6 +47,8 @@
     ((uint32_t)(msec) * (uint32_t)RHINO_CONFIG_TICKS_PER_SECOND / 1000uL)
 
 #define TICKS_TO_MSEC(tick) ((tick)*1000uL / (uint32_t)RHINO_CONFIG_TICKS_PER_SECOND)
+
+#define ALIOS_API    1
 
 /// @cond hidden 
 /*********************************************************************************************************************
@@ -77,7 +77,6 @@ uint32_t pal_os_timer_get_time_in_milliseconds(void)
 	
 	//得到任务的当前tick值
     ticks = krhino_sys_tick_get();
-
 	return TICKS_TO_MSEC(ticks);
 }
 
@@ -92,7 +91,7 @@ void pal_os_timer_delay_in_milliseconds(uint16_t milliseconds)
 {
 
 //AliOS supports 2 methods of timer configuration
-#if 0
+#if (ALIOS_API==1)
 	//Minimum sleep period is 10ms
 	//Sleep period will round up to the nearest 10ms. eg. input of 31ms will be rounded up to 40ms.
 	if (milliseconds < 10)
@@ -107,14 +106,8 @@ void pal_os_timer_delay_in_milliseconds(uint16_t milliseconds)
 	if(dtick==0)
 		return;
 
-	//uint64_t dtick = milliseconds * RHINO_CONFIG_TICKS_PER_SECOND / 1000L;
-	//krhino_task_sleep(dtick);
 	krhino_task_sleep(dtick);
 #endif
-
-    //#TODO:
-   // const TickType_t xDelay = pdMS_TO_TICKS(milliseconds);
-//	vTaskDelay( xDelay );
 }
 
 /**
