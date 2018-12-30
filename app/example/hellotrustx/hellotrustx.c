@@ -38,13 +38,13 @@
 #define ENABLE_VFS_INTERFACE          0
 #define ENABLE_TIMER_TEST             0
 #define ENABLE_EVENT_TIMER_TEST       0
-#define ENABLE_NEW_TASK_TEST          0
+#define ENABLE_CREATE_NEW_TASK_TEST   0
 #define ENABLE_QUEUE_TEST             1
 
 void timer_test(void);
 void gpio_test(void);
 void event_timer_test(void);
-void new_task_test(void);
+void create_new_task_test(void);
 void queue_test(void);
 
 //Timer
@@ -165,7 +165,7 @@ int application_start(int argc, char *argv[])
 	event_timer_test();
 #endif
 #if (ENABLE_NEW_TASK_TEST == 1)	
-	new_task_test();
+	create_new_task_test();
 #endif
 
 #if (ENABLE_QUEUE_TEST == 1)	
@@ -277,12 +277,12 @@ static void task1(void *arg)
     aos_task_exit(0);
 }
 
-void new_task_test(void)
+void create_new_task_test(void)
 {
 	unsigned int stack_size = 1024;
     int ret = -1;
 
-	printf(">new_task_test()\r\n");
+	printf(">create_new_task_test()\r\n");
 
     aos_sem_new(&g_sem_taskexit_sync, 0);
 
