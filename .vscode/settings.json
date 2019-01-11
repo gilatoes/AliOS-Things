@@ -29,8 +29,7 @@
             "label": "kill all terminals",
             "sequence": [
                 "workbench.action.terminal.kill",
-                "workbench.action.terminal.kill",
-                "workbench.action.terminal.kill",                                        
+                "workbench.action.terminal.kill"                                       
             ]
         },
         {
@@ -45,7 +44,7 @@
         {
             "command": "multiCommand.upload",
             "label": "kill terminals and upload",
-            "interval": 15000,
+            "interval": 20000,
             "sequence": [
                 "multiCommand.killall",
                 "alios-studio.upload",

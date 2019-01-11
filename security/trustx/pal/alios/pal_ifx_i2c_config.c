@@ -51,7 +51,7 @@
  *********************************************************************************************************************/
 #define PAL_I2C_MASTER_SCL_IO           22               /*!< gpio number for I2C master clock */
 #define PAL_I2C_MASTER_SDA_IO           21               /*!< gpio number for I2C master data  */
-#define PAL_I2C_MASTER_NUM              0       /*!< I2C port number for master dev */
+#define PAL_I2C_MASTER_NUM              0                /*!< I2C port number for master dev */
 #define PAL_I2C_MASTER_FREQ_HZ          400000           /*!< I2C master clock frequency */
 
 typedef struct esp32_i2c_ctx {

@@ -5,6 +5,7 @@
 #include "device/vfs_i2c.h"
 #include "hal/soc/soc.h"
 #include "vfs_err.h"
+#include "stdio.h"
 
 /* i2c driver struct */
 const struct file_ops i2c_ops =
@@ -17,6 +18,7 @@ const struct file_ops i2c_ops =
 
 int vfs_i2c_open(inode_t *inode, file_t *fp)
 {
+	printf(">vfs_i2c_open()\r\n");
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
 
@@ -37,12 +39,15 @@ int vfs_i2c_open(inode_t *inode, file_t *fp)
     } else {
         ret = -EINVAL;
     }
+	
+	printf("<vfs_i2c_open()\r\n");
 
     return ret;
 }
 
 int vfs_i2c_close(file_t *fp)
 {
+	printf(">vfs_i2c_close()\r\n");
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
 
@@ -68,12 +73,14 @@ int vfs_i2c_close(file_t *fp)
     } else {
         ret = -EINVAL;
     }
+	printf("<vfs_i2c_close()\r\n");
 
     return ret;
 }
 
 ssize_t vfs_i2c_read(file_t *fp, void *buf, size_t nbytes)
 {
+	printf(">vfs_i2c_read()\r\n");
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
     uint16_t dev_addr = 0;     /* dev address */
@@ -104,11 +111,13 @@ ssize_t vfs_i2c_read(file_t *fp, void *buf, size_t nbytes)
         ret = -EINVAL;
     } 
     
+	printf("<vfs_i2c_read()\r\n");
     return ret;
 }
 
 ssize_t vfs_i2c_write(file_t *fp, const void *buf, size_t nbytes)
 {
+	printf(">vfs_i2c_write()\r\n");
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
     uint16_t dev_addr = 0;     /* dev address */
@@ -138,6 +147,7 @@ ssize_t vfs_i2c_write(file_t *fp, const void *buf, size_t nbytes)
     } else {
         ret = -EINVAL;
     }
-
+	
+	printf("<vfs_i2c_write()\r\n");
     return ret;
 }

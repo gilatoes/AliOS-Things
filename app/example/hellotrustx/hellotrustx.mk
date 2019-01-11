@@ -20,3 +20,4 @@ GLOBAL_INCLUDES += ./../../../kernel/rhino/vfs/include/
 GLOBAL_INCLUDES += ./../../../kernel/rhino/vfs/include/device/
 
 GLOBAL_INCLUDES += ./../../../platform/mcu/esp32/bsp/include/driver/include/driver/
+GLOBAL_INCLUDES += ./../../../platform/mcu/esp32/hal/

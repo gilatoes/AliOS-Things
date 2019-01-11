@@ -43,13 +43,16 @@ typedef struct i2c_resource {
 
 
 static i2c_resource_t g_dev[I2C_NUM_MAX] = {
-    {(volatile i2c_dev_t *)0x60013000,23,22},
+    //{(volatile i2c_dev_t *)0x60013000,23,22},
+	{(volatile i2c_dev_t *)0x60013000,22,21},
     {(volatile i2c_dev_t *)0x60027000,19,18}
 };
 
 
 static int8_t i2c_config_pin(int32_t port,uint32_t sda_num,uint32_t scl_num)
 {
+	printf(">i2c_config_pin()\r\n");
+	printf("port=%d, sda=%d, scl=%d\r\n", port, sda_num, scl_num);
     int32_t sda_in_sig = 0;
     int32_t sda_out_sig = 0;
     int32_t scl_in_sig = 0;
@@ -85,6 +88,8 @@ static int8_t i2c_config_pin(int32_t port,uint32_t sda_num,uint32_t scl_num)
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT1_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST);
     }
+	
+	printf("<i2c_config_pin()\r\n");
 
     return (0);
 }
@@ -93,6 +98,7 @@ static int8_t i2c_config_pin(int32_t port,uint32_t sda_num,uint32_t scl_num)
 
 static void i2c_config_ctr(i2c_dev_t * handle,uint32_t clk)
 {
+	printf(">i2c_config_ctr()\r\n");
     int32_t cycle = (APB_CLK_FREQ / clk);
     int32_t half_cycle = cycle / 2;
     handle->ctr.rx_lsb_first = 0;
@@ -111,6 +117,7 @@ static void i2c_config_ctr(i2c_dev_t * handle,uint32_t clk)
     handle->scl_rstart_setup.time = half_cycle;
     handle->scl_stop_hold.time = half_cycle;
     handle->scl_stop_setup.time = half_cycle;
+	printf("<i2c_config_ctr()\r\n");
 
 }
 
@@ -146,6 +153,8 @@ static void i2c_start_prepare(i2c_dev_t * handle)
 static void i2c_send_addr(i2c_dev_t * handle,uint8_t is_write,uint16_t addr_value,int8_t addr_width)
 {
 
+	printf(">i2c_send_addr()\r\n");
+	printf("addr=0x%x addr_width=%d\r\n",addr_value, addr_width);
     uint8_t low_mask = (is_write)?(0xF0):(0xF1);
     if(addr_width) {
         handle->fifo_data.data = (((addr_value >> 8) & 0x6) | low_mask);
@@ -153,6 +162,8 @@ static void i2c_send_addr(i2c_dev_t * handle,uint8_t is_write,uint16_t addr_valu
         return;
     }
     handle->fifo_data.data = addr_value & 0xFF;
+	
+	printf(">i2c_send_addr()\r\n");
 
 }
 
@@ -245,6 +256,7 @@ static int32_t i2c_write_bytes(i2c_dev_t * handle,uint16_t addr,int8_t add_width
 
 static int32_t i2c_read_bytes(i2c_dev_t * handle,uint16_t addr,int8_t add_width,uint8_t * buff,uint32_t len,int8_t need_stop)
 {
+	printf(">i2c_read_bytes()\r\n");
     if(NULL == handle || NULL == buff || len == 0) {
         return(-1);
     }
@@ -305,12 +317,14 @@ static int32_t i2c_read_bytes(i2c_dev_t * handle,uint16_t addr,int8_t add_width,
         } while(krhino_sys_time_get() - startAt < 20);
     }
 
+	printf("<i2c_read_bytes()\r\n");
     return (0);
 }
 
 
 int32_t hal_i2c_init(aos_i2c_dev_t *i2c)
 {
+	printf("<hal_i2c_init()\r\n");
     int32_t ret = 0;
     if(NULL == i2c || (I2C_NUM_0 != i2c->port)&&(I2C_NUM_1 != i2c->port)) {
         return (-1);
@@ -318,12 +332,15 @@ int32_t hal_i2c_init(aos_i2c_dev_t *i2c)
     i2c_resource_t * resource = &g_dev[i2c->port];
     i2c_config_pin(i2c->port,resource->sda_io,resource->scl_io);
     i2c_config_ctr(resource->dev,i2c->config.freq);
+	
+	printf("<hal_i2c_init()\r\n");
 
     return ret;
 }
 
 int32_t hal_i2c_master_send(aos_i2c_dev_t *i2c, uint16_t dev_addr, const uint8_t *data,uint16_t size, uint32_t timeout)
 {
+	printf(">hal_i2c_master_send()\r\n");
     int32_t ret = 0;
     if(NULL == i2c || (I2C_NUM_0 != i2c->port)&&(I2C_NUM_1 != i2c->port)) {
         return (-1);
@@ -331,12 +348,15 @@ int32_t hal_i2c_master_send(aos_i2c_dev_t *i2c, uint16_t dev_addr, const uint8_t
     i2c_resource_t * resource = &g_dev[i2c->port];
     uint16_t addr = dev_addr >> 1;
     i2c_write_bytes(resource->dev,addr,i2c->config.address_width == I2C_MEM_ADDR_SIZE_16BIT,data,size,0);
+	
+	printf("<hal_i2c_master_send()\r\n");
 
     return ret;
 }
 
 int32_t hal_i2c_master_recv(aos_i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data,uint16_t size, uint32_t timeout)
 {
+	printf(">hal_i2c_master_recv()\r\n");
     int32_t ret = 0;
     if(NULL == i2c || (I2C_NUM_0 != i2c->port)&&(I2C_NUM_1 != i2c->port)) {
         return (-1);
@@ -344,6 +364,8 @@ int32_t hal_i2c_master_recv(aos_i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data
     i2c_resource_t * resource = &g_dev[i2c->port];
     uint16_t addr = dev_addr >> 1;
     i2c_read_bytes(resource->dev,addr,i2c->config.address_width == I2C_MEM_ADDR_SIZE_16BIT,data,size,0);
+	
+	printf("<hal_i2c_master_recv()\r\n");
 
     return ret;
 }

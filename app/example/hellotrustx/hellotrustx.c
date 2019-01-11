@@ -8,6 +8,8 @@
 #include <aos/errno.h>
 #include <k_api.h>
 
+#include <hal/soc/i2c.h>
+
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_register.h>
@@ -15,10 +17,12 @@
 #include <vfs_i2c.h>
 
 //#include "driver/gpio.h"
+//#include "driver/i2c.h"
 
 //#include <gpio.h>
 //#include <../../../platform/mcu/esp32/bsp/include/driver/include/driver/gpio.h>
 #include <../../../platform/mcu/esp32/bsp/include/soc/esp32/include/soc/gpio_sig_map.h>
+
 
 #include "trustx/optiga/include/optiga/Version.h"
 
@@ -42,7 +46,7 @@
 #define ENABLE_CREATE_NEW_TASK_TEST   0
 #define ENABLE_QUEUE_TEST             0
 #define ENABLE_I2C_TEST               1
-#define ENABLE_TRUSTX_DRIVER          0
+#define ENABLE_TRUSTX_DRIVER          1
 
 void timer_test(void);
 void gpio_test(void);
@@ -380,7 +384,7 @@ void gpio_test(void)
 	char* gpio_path = "/dev/gpio/";
 	printf("Register GPIO driver\r\n"); //Default GPIO is high
     ret = aos_register_driver(gpio_path, &gpio_ops, &trustx_reset);
-	if(ret!=0){
+	if(ret!=VFS_SUCCESS){
 		printf("failed to register gpio device driver, ret=%d\r\n", ret);
 		while(1){};
 	}
@@ -414,7 +418,7 @@ void gpio_test(void)
 
 	printf("Close GPIO driver\r\n");
 	ret = aos_close(fd_gpio);
-	if(ret!=0){
+	if(ret!=VFS_SUCCESS){
 		printf("failed to close gpio driver, ret=%d\r\n", ret);
 	}
 
@@ -440,10 +444,10 @@ void gpio_test(void)
 i2c_dev_t i2c_dev_test =
 {
     .port = 0,
-    .config.address_width = 8,
+    .config.address_width = 6,
     .config.freq = 400000,
     .config.mode = I2C_MODE_MASTER,
-    .config.dev_addr = 0x30
+    .config.dev_addr = (0x30<<1)
 };
 
 void i2c_test(void)
@@ -458,20 +462,24 @@ void i2c_test(void)
 
 	printf(">i2c_test()\r\n");
 
-	 /* example of i2c */
+	 /* i2c_ops is a structure in vfs_i2c.c */
     ret = aos_register_driver(i2c_path, &i2c_ops, &i2c_dev_test);
-	if(ret!=0){
+	if(ret!=VFS_SUCCESS){
 		printf("failed to register i2c driver, ret=%d\r\n", ret);
 	}
     
+	printf("Open i2c:\r\n");
     fd_i2c = aos_open(i2c_path,0);
-	if(ret!=0){
+	if(ret!=VFS_SUCCESS){
 		printf("failed to open i2c driver, ret=%d\r\n", ret);
 	}
     
+	printf("Read i2c:\r\n");
     ret = aos_read(fd_i2c, read_buf, sizeof(read_buf));
-	if(ret!=0){
+	if(ret < 0){
 		printf("failed to read i2c device, ret=%d\r\n", ret);
+	}else{
+		printf("read i2c device, ret=%d\r\n", ret);
 	}
 
     for (i = 0; i < 10; i++) {
@@ -480,12 +488,17 @@ void i2c_test(void)
         }
     }
     
+	printf("Write i2c:\r\n");
     ret = aos_write(fd_i2c, write_buf, sizeof(read_buf));
-	if(ret!=0){
+	if(ret<0){
 		printf("failed to write i2c driver, ret=%d\r\n", ret);
+	}else{
+		printf("failed to write i2c device, ret=%d\r\n", ret);
 	}
+	
+	printf("Close i2c:\r\n");
 	ret = aos_close(fd_i2c);
-	if(ret!=0){
+	if(ret!=VFS_SUCCESS){
 		printf("failed to close i2c driver, ret=%d\r\n", ret);
 	}
 	printf("<i2c_test()\r\n");

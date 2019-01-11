@@ -42,6 +42,9 @@
 #include <vfs_register.h>
 #include <vfs_i2c.h>
 
+#include <hal/soc/i2c.h>
+
+
 /**********************************************************************************************************************
  * MACROS
  *********************************************************************************************************************/
@@ -59,6 +62,15 @@
 /*********************************************************************************************************************
  * LOCAL DATA
  *********************************************************************************************************************/
+i2c_dev_t i2c_dev_test1 =
+{
+    .port = 0,
+    .config.address_width = 6,
+    .config.freq = 400000,
+    .config.mode = I2C_MODE_MASTER,
+    .config.dev_addr = (0x30<<1)
+};
+
 typedef struct esp32_i2c_ctx {
 	uint8_t  port;
 	uint8_t	 scl_io;
@@ -115,6 +127,38 @@ pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
 
 	if ((p_i2c_context == NULL) || (p_i2c_context->p_i2c_hw_config == NULL))
 		return PAL_STATUS_FAILURE;
+
+	char* i2c_path = "/dev/i2c/";
+    int fd_i2c = 0;    
+    int i = 0;
+    int ret = -1;
+	int res = 0;
+	uint8_t write_buf[10] = {0,1,2,3,4,5,6,7,8,9};
+	uint8_t read_buf[10] = {0};
+
+	master_ctx = (esp32_i2c_ctx_t*)p_i2c_context->p_i2c_hw_config;
+
+	i2c_dev_test1.port =  master_ctx->port;
+
+	i2c_dev_test1.config.dev_addr = (esp32_i2c_ctx_t*)p_i2c_context->slave_address;
+	i2c_dev_test1.config.freq = master_ctx->bitrate;
+
+	printf("port=%d\r\n", i2c_dev_test1.port );
+	printf("addr=%d\r\n", i2c_dev_test1.config.dev_addr );
+	printf("freq=%d\r\n", i2c_dev_test1.config.freq);
+
+	 /* i2c_ops is a structure in vfs_i2c.c */
+    ret = aos_register_driver(i2c_path, &i2c_ops, &i2c_dev_test1);
+	if(ret!=VFS_SUCCESS){
+		printf("failed to register i2c driver, ret=%d\r\n", ret);
+	}
+    
+	printf("Open i2c:\r\n");
+    fd_i2c = aos_open(i2c_path,0);
+	if(ret!=VFS_SUCCESS){
+		printf("failed to open i2c driver, ret=%d\r\n", ret);
+	}
+    
 
 #if 0	
 	master_ctx = (esp32_i2c_ctx_t*)p_i2c_context->p_i2c_hw_config;
