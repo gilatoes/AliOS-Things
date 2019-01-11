@@ -37,6 +37,10 @@
 #include "pal_i2c.h"
 //#TODO
 //#include "driver/i2c.h"
+#include <vfs_conf.h>
+#include <vfs_err.h>
+#include <vfs_register.h>
+#include <vfs_i2c.h>
 
 /**********************************************************************************************************************
  * MACROS
@@ -103,15 +107,16 @@ static pal_i2c_t * gp_pal_i2c_current_ctx;
 pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
 {
 	int master_port;
-#if 0	
+#if 1
 	esp32_i2c_ctx_t* master_ctx;
-	i2c_config_t conf;
+	//i2c_config_t conf;
 #endif	
 	printf(">pal_i2c_init()\r\n");
-#if 0
+
 	if ((p_i2c_context == NULL) || (p_i2c_context->p_i2c_hw_config == NULL))
 		return PAL_STATUS_FAILURE;
-	
+
+#if 0	
 	master_ctx = (esp32_i2c_ctx_t*)p_i2c_context->p_i2c_hw_config;
 	master_port = master_ctx->port;
     conf.mode = I2C_MODE_MASTER;

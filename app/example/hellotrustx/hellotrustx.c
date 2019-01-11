@@ -12,6 +12,7 @@
 #include <vfs_err.h>
 #include <vfs_register.h>
 #include <vfs_gpio.h>
+#include <vfs_i2c.h>
 
 //#include "driver/gpio.h"
 
@@ -32,20 +33,23 @@
 #include "trustx/optiga/include/optiga/ifx_i2c/ifx_i2c.h"
 
 //Independent AliOS test routines
-#define ENABLE_GPIO_TEST              0
+#define ENABLE_GPIO_TEST              1
 //When VFS interface is enabled, a unified user interface for various files (including device files and system files) is enabled.
 //Otherwise, the application will access directly to the HAL layer
 #define ENABLE_VFS_INTERFACE          0
 #define ENABLE_TIMER_TEST             0
 #define ENABLE_EVENT_TIMER_TEST       0
 #define ENABLE_CREATE_NEW_TASK_TEST   0
-#define ENABLE_QUEUE_TEST             1
+#define ENABLE_QUEUE_TEST             0
+#define ENABLE_I2C_TEST               1
+#define ENABLE_TRUSTX_DRIVER          0
 
 void timer_test(void);
 void gpio_test(void);
 void event_timer_test(void);
 void create_new_task_test(void);
 void queue_test(void);
+void i2c_test(void);
 
 //Timer
 aos_timer_t event_timer;
@@ -97,6 +101,9 @@ static int32_t optiga_init(void)
 		{
 			return OPTIGA_COMMS_BUSY;
 		}
+		
+		pal_os_timer_delay_in_milliseconds(5);
+		printf("pal_os_event_init completed\r\n");
 
 		//Invoke optiga_comms_open to initialize the IFX I2C Protocol and security chip
 		optiga_comms_status = OPTIGA_COMMS_BUSY;
@@ -108,11 +115,17 @@ static int32_t optiga_init(void)
 			break;
 		}
 
+		pal_os_timer_delay_in_milliseconds(5);
+		printf("optiga_comms_open\r\n");
+
 		//Wait until IFX I2C initialization is complete
 		while(optiga_comms_status == OPTIGA_COMMS_BUSY)
 		{
 			pal_os_timer_delay_in_milliseconds(10);
 		}
+
+		printf("finished waiting comms\r\n");
+		while(1);
 
 		if((OPTIGA_COMMS_SUCCESS != status) || (optiga_comms_status == OPTIGA_COMMS_ERROR))
 		{
@@ -172,8 +185,15 @@ int application_start(int argc, char *argv[])
 	queue_test();
 #endif
 
+#if (ENABLE_I2C_TEST == 1)
+	i2c_test();
+#endif	
+
+#if (ENABLE_TRUSTX_DRIVER ==1)
+	printf("Start Trust X driver\r\n");
 	gpio_init();
 	optiga_init();	
+#endif
 
     //aos_post_delayed_action(5000, app_delayed_action, NULL);
     //aos_loop_run();
@@ -402,7 +422,7 @@ void gpio_test(void)
 	//Direct access to the GPIO HAL layer
 	gpio_init();
 
-#if 1
+#if 0
 	//Toggle GPIO (On ESP32, takes 9.31ms)
 	hal_gpio_output_toggle(&trustx_reset);
 #else	
@@ -414,4 +434,60 @@ void gpio_test(void)
 	hal_gpio_finalize(&trustx_reset);
 #endif	
 #endif
+
+}
+
+i2c_dev_t i2c_dev_test =
+{
+    .port = 0,
+    .config.address_width = 8,
+    .config.freq = 400000,
+    .config.mode = I2C_MODE_MASTER,
+    .config.dev_addr = 0x30
+};
+
+void i2c_test(void)
+{
+	char* i2c_path = "/dev/i2c/";
+    int fd_i2c = 0;    
+    int i = 0;
+    int ret = -1;
+	int res = 0;
+	uint8_t write_buf[10] = {0,1,2,3,4,5,6,7,8,9};
+	uint8_t read_buf[10] = {0};
+
+	printf(">i2c_test()\r\n");
+
+	 /* example of i2c */
+    ret = aos_register_driver(i2c_path, &i2c_ops, &i2c_dev_test);
+	if(ret!=0){
+		printf("failed to register i2c driver, ret=%d\r\n", ret);
+	}
+    
+    fd_i2c = aos_open(i2c_path,0);
+	if(ret!=0){
+		printf("failed to open i2c driver, ret=%d\r\n", ret);
+	}
+    
+    ret = aos_read(fd_i2c, read_buf, sizeof(read_buf));
+	if(ret!=0){
+		printf("failed to read i2c device, ret=%d\r\n", ret);
+	}
+
+    for (i = 0; i < 10; i++) {
+        if(read_buf[i] != i) {
+            res = -1;
+        }
+    }
+    
+    ret = aos_write(fd_i2c, write_buf, sizeof(read_buf));
+	if(ret!=0){
+		printf("failed to write i2c driver, ret=%d\r\n", ret);
+	}
+	ret = aos_close(fd_i2c);
+	if(ret!=0){
+		printf("failed to close i2c driver, ret=%d\r\n", ret);
+	}
+	printf("<i2c_test()\r\n");
+    
 }

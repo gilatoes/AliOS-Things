@@ -352,7 +352,7 @@ static host_lib_status_t ifx_i2c_pl_set_bit_rate(ifx_i2c_context_t *p_ctx, uint1
         if (p_ctx->pl.retry_counter--)
         {
             LOG_PL("[IFX-PL]: Set bit rate failed, Retry setting.\n");
-            pal_os_event_register_callback_oneshot(ifx_i2c_pl_negotiation_event_handler,((void*)p_ctx),PL_POLLING_INVERVAL_US);
+            pal_os_event_register_callback_oneshot(ifx_i2c_pl_negotiation_event_handler,((void*)p_ctx),PL_POLLING_INVERVAL_US+1);
             status = IFX_I2C_STACK_BUSY;
         }
         else
@@ -586,7 +586,7 @@ static void ifx_i2c_pl_frame_event_handler(ifx_i2c_context_t *p_ctx,host_lib_sta
                         // Continue polling STATUS register if retry limit is not reached
                         if ((pal_os_timer_get_time_in_milliseconds() - p_ctx->dl.frame_start_time) < p_ctx->dl.data_poll_timeout)
                         {
-                            pal_os_event_register_callback_oneshot(ifx_i2c_pl_status_poll_callback, (void *)p_ctx, PL_DATA_POLLING_INVERVAL_US);
+                            pal_os_event_register_callback_oneshot(ifx_i2c_pl_status_poll_callback, (void *)p_ctx, PL_DATA_POLLING_INVERVAL_US+2);
                         }
                         else
                         {
@@ -608,7 +608,7 @@ static void ifx_i2c_pl_frame_event_handler(ifx_i2c_context_t *p_ctx,host_lib_sta
                     // Continue polling STATUS register if retry limit is not reached
                     if ((pal_os_timer_get_time_in_milliseconds() - p_ctx->dl.frame_start_time) < p_ctx->dl.data_poll_timeout)
                     {
-                        pal_os_event_register_callback_oneshot(ifx_i2c_pl_status_poll_callback, (void *)p_ctx, PL_DATA_POLLING_INVERVAL_US);
+                        pal_os_event_register_callback_oneshot(ifx_i2c_pl_status_poll_callback, (void *)p_ctx, PL_DATA_POLLING_INVERVAL_US+3);
                     }
                     else
                     {
@@ -686,7 +686,7 @@ static void ifx_i2c_pl_pal_event_handler(void *p_ctx, host_lib_status_t event)
             if (p_local_ctx->pl.retry_counter--)
             {
 				LOG_PL("[IFX-PL]: PAL Error -> Continue polling\n");
-                pal_os_event_register_callback_oneshot(ifx_i2c_pal_poll_callback,p_local_ctx,PL_POLLING_INVERVAL_US);
+                pal_os_event_register_callback_oneshot(ifx_i2c_pal_poll_callback,p_local_ctx,PL_POLLING_INVERVAL_US+4);
             }
             else
             {
@@ -697,7 +697,7 @@ static void ifx_i2c_pl_pal_event_handler(void *p_ctx, host_lib_status_t event)
             
         case PAL_I2C_EVENT_SUCCESS:
             LOG_PL("[IFX-PL]: PAL Success -> Wait Guard Time\n");
-            pal_os_event_register_callback_oneshot(ifx_i2c_pl_guard_time_callback,p_local_ctx,PL_GUARD_TIME_INTERVAL_US);
+            pal_os_event_register_callback_oneshot(ifx_i2c_pl_guard_time_callback,p_local_ctx,PL_GUARD_TIME_INTERVAL_US+5);
             break;
         default:
             break;

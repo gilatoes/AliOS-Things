@@ -33,11 +33,6 @@
 /**********************************************************************************************************************
  * HEADER FILES
  *********************************************************************************************************************/
-
-//#include "FreeRTOS.h"
-//#include "timers.h"
-//#include "queue.h"
-
 #include "pal.h"
 #include "pal_os_event.h"
 #include "pal.h"
@@ -53,10 +48,8 @@
 /**********************************************************************************************************************
  * MACROS
  *********************************************************************************************************************/
-#define MAX_CALLBACKS	5
+#define MAX_CALLBACKS	1
 
-#define DEMO_TASK_STACKSIZE    64 //256*cpu_stack_t = 1024byte
-#define DEMO_TASK_PRIORITY     20
 /*********************************************************************************************************************
  * LOCAL DATA
  *********************************************************************************************************************/
@@ -69,15 +62,7 @@ typedef struct callbacks {
 	void * clb_ctx;
 }pal_os_event_clbs_t;
 
-//#TODO
-//static TimerHandle_t otxTimer[MAX_CALLBACKS];
-static pal_os_event_clbs_t clbs[MAX_CALLBACKS];
-
-static ktask_t demo_task_obj;
-cpu_stack_t demo_task_buf[DEMO_TASK_STACKSIZE];
-
-//#TODO
-//QueueHandle_t xQueueCallbacks;
+static pal_os_event_clbs_t clbs[MAX_CALLBACKS]; 
 
 /**
 *  Timer callback handler. 
@@ -89,161 +74,142 @@ cpu_stack_t demo_task_buf[DEMO_TASK_STACKSIZE];
 *\param[in] args Callback argument
 *
 */
-#if 0
-void vTimerCallback( TimerHandle_t xTimer )
- {
-	uint8_t timer_id = 0;
-	pal_os_event_clbs_t clb_params;
-    /* Optionally do something if the pxTimer parameter is NULL. */
-    configASSERT( xTimer );
-
-
-    portENTER_CRITICAL();
-
-    /* The number of times this timer has expired is saved as the
-	timer's ID.  Obtain the count. */
-    timer_id = ( uint8_t ) pvTimerGetTimerID( xTimer );
-
-    clb_params.clb = clbs[timer_id].clb;
-    clb_params.clb_ctx = clbs[timer_id].clb_ctx;
-    /*
-     * You cann't call callback from the timer callback, this might lead to a corruption
-     * Use queues instead to activate corresponding handler
-     * */
-    xQueueSend( xQueueCallbacks, ( void * ) &clb_params, ( TickType_t ) 10 );
-
-    portEXIT_CRITICAL();
-}
-#endif
-
-void vTimerCallback( void )
-{}
 
 /// @endcond
 
-void vTaskCallbackHandler( void * pvParameters )
+//Timer
+aos_timer_t callback_timer;
+
+#define TEST_CONFIG_QUEUE_BUF_SIZE              (32)
+static aos_queue_t  callback_queue;
+static char         queue_buf[TEST_CONFIG_QUEUE_BUF_SIZE];
+
+//Elapsed time handler
+static void time_elapsed_handler(void *arg, void *arg2)
+{
+	int ret =0;
+	//printf(">time_elapsed_handler()\r\n");
+	pal_os_event_clbs_t clb_params;
+
+	CPSR_ALLOC();
+
+	RHINO_CRITICAL_ENTER(); //No printing in Critical Section
+
+	clb_params.clb = clbs[0].clb;
+	clb_params.clb_ctx = clbs[0].clb_ctx;
+
+	if((clb_params.clb==NULL) || (clb_params.clb_ctx==NULL) )
+	{
+		//printf("clb_params is null\r\n");	
+		return;
+	}
+
+	ret = aos_queue_is_valid(&callback_queue);
+	if(ret == 0)
+	{
+		//printf("Invalid queue ret=%d\r\n", ret);
+	}else{
+		ret = aos_queue_send(&callback_queue, (void *) &clb_params, sizeof(pal_os_event_clbs_t));
+		if(ret!=0)
+		{
+			//printf("failed to send queue: taskname: %s ret=%d\r\n", aos_task_name(), ret);
+		}
+		aos_timer_free(&callback_timer);
+	}
+
+	RHINO_CRITICAL_EXIT();
+
+	//printf("<time_elapsed_handler()\r\n");
+}
+
+//Task which receive message from a queue and perform callback after timer is up
+static void recv_queue_and_callback_task(void *arg)
 {
 	pal_os_event_clbs_t clb_params;
 	register_callback func = NULL;
 	void * func_args = NULL;
-	/* See if we can obtain the element from the Queue.  If the Queue is not
-	available wait block the task to see if it becomes free.
-	portMAX_DELAY works only if INCLUDE_vTaskSuspend id define to 1
-	*/
+	int msg = -1;
+	int ret = -1;
+	unsigned int size = 0;
 
-	//do {
-	//	if( xQueueReceive( xQueueCallbacks, &( clb_params ), ( TickType_t ) portMAX_DELAY ) )
-    //{
-	//		if (clb_params.clb)
-	//		{
-	//			func = clb_params.clb;
-	//			func_args = clb_params.clb_ctx;
-	//			func((void*)func_args);
-	//		}
-	//	}
-	//} while(1);
+	//printf("Start task name: %s\r\n", aos_task_name());
+
+	while(1){
+		
+		//从queue内收取数据，如没有数据则阻塞当前任务等待
+		ret = aos_queue_is_valid(&callback_queue);
+		if(ret == 0)
+		{
+			printf("Invalid queue ret=%d\r\n", ret);
+		}
+		//printf("?");
+		ret = aos_queue_recv(&callback_queue, AOS_WAIT_FOREVER, &clb_params, &size);
+		if(ret != 0 )
+		{			
+			printf("task name: %s error:%d\r\n", aos_task_name(), ret);
+			//printf("aos_queue receive error ret=%d size of msg q=%d\r\n", ret, size);				
+		}else{			
+			//Process the callbacks		
+			if (clb_params.clb != NULL){
+					printf("@@\r\n");
+					func = clb_params.clb;
+					func_args = clb_params.clb_ctx; 
+					func((void*)func_args);
+			}
+		}
+
+		//Clear registered callbacks
+		func = NULL;
+		clb_params.clb = NULL;		
+	}
 }
-
-void demo_task(void *arg)
-{
-
-    int count = 0;
-
-    printf("demo_task here!\n");
-    printf("rhino memory is %d!\n", krhino_global_space_get());
-#if 0
-    while (1)
-    {
-
-        printf("hello world! count %d\n", count++);
-  
-        //sleep 1 second
-        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
-    };
-#endif	
-}
-/**
-* Platform specific event init function.
+/** 
+* Platform specific event init function. 
 * <br>
 *
-* <b>API Details:</b>
+* <b>API Details:</b> 
 *         This function initialise all required event related variables.<br>
 *
 *
 */
 pal_status_t pal_os_event_init(void)
 {
+	unsigned int stack_size = 8*(1024);
+    int ret = -1;
+
+	int single_shot=0; 
+
 	printf(">pal_os_event_init()\r\n");
+	//printf("Start task name: %s\r\n", aos_task_name());
 
-	timer_dev_t tasktimer;
-
-	  tasktimer.config.reload_mode = TIMER_RELOAD_AUTO;
-	  tasktimer.config.period = 1000000;
-	  tasktimer.config.cb = &vTimerCallback;//tasktimer.port = PORT_TIMER3;
-
-	//hal_timer_init(&tasktimer);
-
-#if 0	
-	uint8_t i = 0;
-	char tmr_name[10];
-	TaskHandle_t xHandle = NULL;
-
-	for (i = 0; i < MAX_CALLBACKS; i++)
+	printf("create new callback queue\r\n");
+	ret = aos_queue_new(&callback_queue, queue_buf, TEST_CONFIG_QUEUE_BUF_SIZE, TEST_CONFIG_QUEUE_BUF_SIZE);	
+	if(ret>0)
 	{
-		if (otxTimer[i] == NULL)
-		{
-			sprintf(tmr_name, "OTXTmr_%d", i);
-			otxTimer[i] = xTimerCreate(  tmr_name,        /* Just a text name, not used by the kernel. */
-									pdMS_TO_TICKS(100),    /* The timer period in ticks. */
-									pdFALSE,         /* The timers will not auto-reload themselves when they expire. */
-									( void * ) i,   /* Assign each timer a unique id equal to its array index. */
-									vTimerCallback  /* Each timer calls the same callback when it expires. */
-									);
-
-			
-			if( otxTimer[i] == NULL )
-			{
-				/* There was insufficient FreeRTOS heap available for the semaphore to
-				be created successfully. */
-			    return PAL_STATUS_FAILURE;
-			}
-		}
-
+		printf("failed to create new queue\r\n");
 	}
 
-	/* Create a queue capable of containing MAX_CALLBACKS timers id values. */
-	xQueueCallbacks = xQueueCreate( MAX_CALLBACKS, sizeof( pal_os_event_clbs_t ) );
+	//动态创建一个任务，任务句柄不返回，创建完后自动运行； 采用默认优先级AOS_DEFAULT_APP_PRI（32） 受宏RHINO_CONFIG_KOBJ_DYN_ALLOC开关控制
+	printf("create new task\r\n");
+    ret = aos_task_new("recv_queue_and_callback_task", recv_queue_and_callback_task, NULL, stack_size);
+	if(ret>0)
+	{
+		printf("failed to create new task\r\n");
+	}
 
-	/* Create the handler for the callbacks. */
-	xTaskCreate( vTaskCallbackHandler,       /* Function that implements the task. */
-				"ClbksHndlr",          /* Text name for the task. */
-				configMINIMAL_STACK_SIZE*5,      /* Stack size in words, not bytes. */
-				NULL,    /* Parameter passed into the task. */
-				5,/* Priority at which the task is created. */
-				&xHandle );      /* Used to pass out the created task's handle. */
+	//动态创建软件定时器
+#if 0	
+	printf("create timer\r\n");
+	ret = aos_timer_new(&callback_timer, time_elapsed_handler, NULL, 100, 0);
+	
+	if(ret != 0)
+	{
+		printf("Error: Unable to create a new timer error: %d\r\n", ret);
+	}
 #endif
+    //printf("recv_queue_and_callback_task exit!\r\n");
 
-	//krhino_task_create(&demo_task_obj, "demo_task", 0,DEMO_TASK_PRIORITY, 50, demo_task_buf, DEMO_TASK_STACKSIZE, demo_task, 1);
-
-//xTimerCreate->aos_timer_new
-//int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *), void *arg, int ms, int repeat)
-//This function will create a timer.
-//[in] 	timer 	pointer to the timer.
-//[in] 	fn 	callback of the timer.
-//[in] 	arg 	the argument of the callback.
-//[in] 	ms 	ms of the normal timer triger.
-//[in] 	repeat 	repeat or not when the timer is created.
-
-//xTimerCreate->krhino_timer_dyn_create
-//kstat_t krhino_timer_dyn_create(ktimer_t **timer, const name_t *name, timer_cb_t cb, sys_time_t first, sys_time_t round, void *arg, uint8_t auto_run)
-
-//xQueueCreate->aos_queue_new
-
-//xTaskCreate->krhino_task_dyn_create
-//Refer to rhinorun.c appexample
-//krhino_task_create(&demo_task_obj, "demo_task", 0,DEMO_TASK_PRIORITY, 50, demo_task_buf, DEMO_TASK_STACKSIZE, demo_task, 1);
-
-	printf("<pal_os_event_init()\r\n");
+	printf("<pal_os_event_init()\r\n\n");
 	return PAL_STATUS_SUCCESS;
 }
 /**
@@ -264,30 +230,33 @@ void pal_os_event_register_callback_oneshot(register_callback callback,
                                             void* callback_args, 
                                             uint32_t time_us)
 {
-#if 0	
-	uint8_t i = 0;
+	int ret;
+	printf(">pal_os_event_register_callback_oneshot() time=%d \r\n", time_us);
+	//printf("Start task name: %s\r\n", aos_task_name());
 
-    for (i = 0; i < MAX_CALLBACKS; i++)
-    {
-    	portENTER_CRITICAL();
-    	if( xTimerIsTimerActive( otxTimer[i] ) == pdFALSE )
-		{
-    		if (time_us < 1000) {
-    			time_us = 1000;
-    		}
-    		xTimerChangePeriod( otxTimer[i], pdMS_TO_TICKS(time_us / 100), 0 );
-    		clbs[i].clb = callback;
-    		clbs[i].clb_ctx = callback_args;
-			
-    		portEXIT_CRITICAL();
-    		break;
-		} else if ( i == (MAX_CALLBACKS - 1) )
-		{
-			//ESP_LOGE("PAL_OS_EVENT", "No available Timers");
-		}
-    	portEXIT_CRITICAL();
-    }
-#endif	
+	if(time_us < 1000)
+		time_us = 1000;
+
+#if 1
+	CPSR_ALLOC();
+
+	RHINO_CRITICAL_ENTER();
+	//printf("Start timer \r\n");
+	ret = aos_timer_new(&callback_timer, time_elapsed_handler, NULL, time_us/1000, 0);
+	if(ret != 0)
+	{
+		printf("Error: failed to create timer ret=%d \r\n", ret);
+	}
+	else{
+		//printf("Register the callback to global memory \r\n");
+		//Register the callback function and arguments
+		clbs[0].clb = callback;
+    	clbs[0].clb_ctx = callback_args;
+	}
+	RHINO_CRITICAL_EXIT();
+#endif
+	printf("<pal_os_event_register_callback_oneshot()\r\n");
+
 }
 
 /**
@@ -304,11 +273,6 @@ void pal_os_event_register_callback_oneshot(register_callback callback,
 */
 void pal_os_event_delayms(uint32_t time_ms)
 {
-#if 0	
-	const TickType_t xDelay = time_ms / portTICK_PERIOD_MS;
-	vTaskDelay(xDelay);
-#endif	
-
 	aos_msleep(time_ms);
 }
 

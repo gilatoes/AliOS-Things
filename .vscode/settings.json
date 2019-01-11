@@ -23,4 +23,44 @@
         "soc.h": "c",
         "gpio.h": "c"
     }
+    "multiCommand.commands": [
+        {
+            "command": "multiCommand.killall",
+            "label": "kill all terminals",
+            "sequence": [
+                "workbench.action.terminal.kill",
+                "workbench.action.terminal.kill",
+                "workbench.action.terminal.kill",                                        
+            ]
+        },
+        {
+            "command": "multiCommand.build",
+            "label": "kill terminals and build",
+            "interval": 1,
+            "sequence": [
+                "multiCommand.killall",
+                "alios-studio.build"                            
+            ]
+        },
+        {
+            "command": "multiCommand.upload",
+            "label": "kill terminals and upload",
+            "interval": 15000,
+            "sequence": [
+                "multiCommand.killall",
+                "alios-studio.upload",
+                "alios-studio.connectDevice"                          
+            ]
+        },
+        {
+            "command": "multiCommand.run",
+            "label": "kill terminals and run the program",
+            "interval": 1,
+            "sequence": [
+                "multiCommand.killall",               
+                "alios-studio.connectDevice"
+            ]
+        }
+    ]
 }
+ 

@@ -44,3 +44,15 @@ projects/autogen/*
 *.SearchResults
 *.WK3
 .DS_Store
+*.sip_sym
+*.sip_xad
+*.sip_xab
+*.sip_xc
+*.sisc
+*.sip_xsd
+*.sip_xf
+*.sip_xm
+*.sip_xr
+*.sip_xsb
+*.siproj
+AliOS Things.si4project/AliOS Things.siproj_settings.xml

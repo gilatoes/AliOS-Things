@@ -389,7 +389,7 @@ static host_lib_status_t ifx_i2c_init(ifx_i2c_context_t* p_ifx_i2c_context)
 				pal_gpio_set_low(p_ifx_i2c_context->p_slave_reset_pin);
 				p_ifx_i2c_context->reset_state = IFX_I2C_STATE_RESET_PIN_HIGH;
 				pal_os_event_register_callback_oneshot((register_callback)ifx_i2c_init,
-                                                       (void *)p_ifx_i2c_context, RESET_LOW_TIME_MSEC);
+                                                       (void *)p_ifx_i2c_context, RESET_LOW_TIME_MSEC+5);
 				api_status = IFX_I2C_STACK_SUCCESS;
 				break;
             
@@ -402,7 +402,7 @@ static host_lib_status_t ifx_i2c_init(ifx_i2c_context_t* p_ifx_i2c_context)
 				pal_gpio_set_high(p_ifx_i2c_context->p_slave_reset_pin);
 				p_ifx_i2c_context->reset_state = IFX_I2C_STATE_RESET_INIT;
 				pal_os_event_register_callback_oneshot((register_callback)ifx_i2c_init,
-                                                       (void *)p_ifx_i2c_context, STARTUP_TIME_MSEC);
+                                                       (void *)p_ifx_i2c_context, STARTUP_TIME_MSEC+2);
 				api_status = IFX_I2C_STACK_SUCCESS;
 				break;
             
