@@ -37,7 +37,7 @@
 #include "trustx/optiga/include/optiga/ifx_i2c/ifx_i2c.h"
 
 //Independent AliOS test routines
-#define ENABLE_GPIO_TEST              1
+#define ENABLE_GPIO_TEST              0
 //When VFS interface is enabled, a unified user interface for various files (including device files and system files) is enabled.
 //Otherwise, the application will access directly to the HAL layer
 #define ENABLE_VFS_INTERFACE          0
@@ -45,7 +45,7 @@
 #define ENABLE_EVENT_TIMER_TEST       0
 #define ENABLE_CREATE_NEW_TASK_TEST   0
 #define ENABLE_QUEUE_TEST             0
-#define ENABLE_I2C_TEST               1
+#define ENABLE_I2C_TEST               0
 #define ENABLE_TRUSTX_DRIVER          1
 
 void timer_test(void);
@@ -119,21 +119,17 @@ static int32_t optiga_init(void)
 			break;
 		}
 
-		pal_os_timer_delay_in_milliseconds(5);
-		printf("optiga_comms_open\r\n");
+		pal_os_timer_delay_in_milliseconds(10);
 
 		//Wait until IFX I2C initialization is complete
 		while(optiga_comms_status == OPTIGA_COMMS_BUSY)
 		{
-			pal_os_timer_delay_in_milliseconds(10);
-		}
-
-		printf("finished waiting comms\r\n");
-		while(1);
+			pal_os_timer_delay_in_milliseconds(20);
+		}		
 
 		if((OPTIGA_COMMS_SUCCESS != status) || (optiga_comms_status == OPTIGA_COMMS_ERROR))
 		{
-			printf("Failure: optiga_comms_status(): 0x%04X\n\r", status);
+			printf("Failure: Unable to initialize IFX I2C: 0x%04X\n\r", status);
 			break;
 		}
 
@@ -197,6 +193,23 @@ int application_start(int argc, char *argv[])
 	printf("Start Trust X driver\r\n");
 	gpio_init();
 	optiga_init();	
+
+	uint8_t UID[27];
+	uint16_t  UID_length = 27;
+	printf("Trust X UID:\r\n");
+	optiga_util_read_data(eCOPROCESSOR_UID, 0, UID, &UID_length);
+	for(int x=0; x<27;)
+	{
+		if(x!=24){
+			printf("%.2x %.2x %.2x %.2x\n", UID[x], UID[x+1], UID[x+2], UID[x+3]);
+		}
+		else{
+			printf("%.2x %.2x %.2x\n", UID[x], UID[x+1], UID[x+2]);
+
+		}
+		x+=4;
+	}
+
 #endif
 
     //aos_post_delayed_action(5000, app_delayed_action, NULL);
@@ -444,8 +457,8 @@ void gpio_test(void)
 i2c_dev_t i2c_dev_test =
 {
     .port = 0,
-    .config.address_width = 6,
-    .config.freq = 400000,
+    .config.address_width = 7,
+    .config.freq = 100000,
     .config.mode = I2C_MODE_MASTER,
     .config.dev_addr = (0x30<<1)
 };
@@ -457,7 +470,7 @@ void i2c_test(void)
     int i = 0;
     int ret = -1;
 	int res = 0;
-	uint8_t write_buf[10] = {0,1,2,3,4,5,6,7,8,9};
+	uint8_t write_buf[10] = {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA};
 	uint8_t read_buf[10] = {0};
 
 	printf(">i2c_test()\r\n");
@@ -473,7 +486,17 @@ void i2c_test(void)
 	if(ret!=VFS_SUCCESS){
 		printf("failed to open i2c driver, ret=%d\r\n", ret);
 	}
-    
+	
+/*
+	printf("Write i2c:\r\n");
+    ret = aos_write(fd_i2c, write_buf, sizeof(write_buf));
+	if(ret<0){
+		printf("failed to write i2c driver, ret=%d\r\n", ret);
+	}else{
+		printf("failed to write i2c device, ret=%d\r\n", ret);
+	}
+*/  
+#if 0	
 	printf("Read i2c:\r\n");
     ret = aos_read(fd_i2c, read_buf, sizeof(read_buf));
 	if(ret < 0){
@@ -487,15 +510,8 @@ void i2c_test(void)
             res = -1;
         }
     }
-    
-	printf("Write i2c:\r\n");
-    ret = aos_write(fd_i2c, write_buf, sizeof(read_buf));
-	if(ret<0){
-		printf("failed to write i2c driver, ret=%d\r\n", ret);
-	}else{
-		printf("failed to write i2c device, ret=%d\r\n", ret);
-	}
-	
+#endif
+
 	printf("Close i2c:\r\n");
 	ret = aos_close(fd_i2c);
 	if(ret!=VFS_SUCCESS){

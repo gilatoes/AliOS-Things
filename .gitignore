@@ -56,3 +56,5 @@ projects/autogen/*
 *.sip_xsb
 *.siproj
 AliOS Things.si4project/AliOS Things.siproj_settings.xml
+*.siwork
+*.xml

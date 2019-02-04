@@ -3,6 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
+                "C:\\Users\\limtsesi\\AppData\\Local\\Arduino15\\packages\\Infineon\\tools\\**",
+                "C:\\Users\\limtsesi\\AppData\\Local\\Arduino15\\packages\\Infineon\\hardware\\arm\\1.2.1\\**",
                 "C:\\Users\\limtsesi\\Desktop\\AliYun\\AliOS-Things\\**"
             ],
             "forcedInclude": [],

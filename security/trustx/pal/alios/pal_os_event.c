@@ -100,14 +100,14 @@ static void time_elapsed_handler(void *arg, void *arg2)
 
 	if((clb_params.clb==NULL) || (clb_params.clb_ctx==NULL) )
 	{
-		//printf("clb_params is null\r\n");	
+		printf("clb_params is null\r\n");	
 		return;
 	}
 
 	ret = aos_queue_is_valid(&callback_queue);
 	if(ret == 0)
 	{
-		//printf("Invalid queue ret=%d\r\n", ret);
+		printf("Invalid queue ret=%d\r\n", ret);
 	}else{
 		ret = aos_queue_send(&callback_queue, (void *) &clb_params, sizeof(pal_os_event_clbs_t));
 		if(ret!=0)
@@ -151,7 +151,7 @@ static void recv_queue_and_callback_task(void *arg)
 		}else{			
 			//Process the callbacks		
 			if (clb_params.clb != NULL){
-					printf("@@\r\n");
+					//printf("@@\r\n");
 					func = clb_params.clb;
 					func_args = clb_params.clb_ctx; 
 					func((void*)func_args);
@@ -179,10 +179,10 @@ pal_status_t pal_os_event_init(void)
 
 	int single_shot=0; 
 
-	printf(">pal_os_event_init()\r\n");
+	//printf(">pal_os_event_init()\r\n");
 	//printf("Start task name: %s\r\n", aos_task_name());
 
-	printf("create new callback queue\r\n");
+	//printf("create new callback queue\r\n");
 	ret = aos_queue_new(&callback_queue, queue_buf, TEST_CONFIG_QUEUE_BUF_SIZE, TEST_CONFIG_QUEUE_BUF_SIZE);	
 	if(ret>0)
 	{
@@ -190,7 +190,7 @@ pal_status_t pal_os_event_init(void)
 	}
 
 	//动态创建一个任务，任务句柄不返回，创建完后自动运行； 采用默认优先级AOS_DEFAULT_APP_PRI（32） 受宏RHINO_CONFIG_KOBJ_DYN_ALLOC开关控制
-	printf("create new task\r\n");
+	//printf("create new task\r\n");
     ret = aos_task_new("recv_queue_and_callback_task", recv_queue_and_callback_task, NULL, stack_size);
 	if(ret>0)
 	{
@@ -209,7 +209,7 @@ pal_status_t pal_os_event_init(void)
 #endif
     //printf("recv_queue_and_callback_task exit!\r\n");
 
-	printf("<pal_os_event_init()\r\n\n");
+	//printf("<pal_os_event_init()\r\n\n");
 	return PAL_STATUS_SUCCESS;
 }
 /**
@@ -231,7 +231,7 @@ void pal_os_event_register_callback_oneshot(register_callback callback,
                                             uint32_t time_us)
 {
 	int ret;
-	printf(">pal_os_event_register_callback_oneshot() time=%d \r\n", time_us);
+	//printf(">pal_os_event_register_callback_oneshot() time=%d \r\n", time_us);
 	//printf("Start task name: %s\r\n", aos_task_name());
 
 	if(time_us < 1000)
@@ -242,7 +242,7 @@ void pal_os_event_register_callback_oneshot(register_callback callback,
 
 	RHINO_CRITICAL_ENTER();
 	//printf("Start timer \r\n");
-	ret = aos_timer_new(&callback_timer, time_elapsed_handler, NULL, time_us/1000, 0);
+	ret = aos_timer_new(&callback_timer, time_elapsed_handler, NULL, time_us/1000, 0);	
 	if(ret != 0)
 	{
 		printf("Error: failed to create timer ret=%d \r\n", ret);
@@ -255,7 +255,7 @@ void pal_os_event_register_callback_oneshot(register_callback callback,
 	}
 	RHINO_CRITICAL_EXIT();
 #endif
-	printf("<pal_os_event_register_callback_oneshot()\r\n");
+	//printf("<pal_os_event_register_callback_oneshot()\r\n");
 
 }
 

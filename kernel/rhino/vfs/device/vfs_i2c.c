@@ -14,6 +14,7 @@ const struct file_ops i2c_ops =
     .close = vfs_i2c_close,
     .read = vfs_i2c_read,
     .write = vfs_i2c_write
+
 };
 
 int vfs_i2c_open(inode_t *inode, file_t *fp)
@@ -40,7 +41,7 @@ int vfs_i2c_open(inode_t *inode, file_t *fp)
         ret = -EINVAL;
     }
 	
-	printf("<vfs_i2c_open()\r\n");
+	printf("<vfs_i2c_open()\r\n\n");
 
     return ret;
 }
@@ -80,7 +81,7 @@ int vfs_i2c_close(file_t *fp)
 
 ssize_t vfs_i2c_read(file_t *fp, void *buf, size_t nbytes)
 {
-	printf(">vfs_i2c_read()\r\n");
+	//printf(">vfs_i2c_read()\r\n");
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
     uint16_t dev_addr = 0;     /* dev address */
@@ -111,13 +112,13 @@ ssize_t vfs_i2c_read(file_t *fp, void *buf, size_t nbytes)
         ret = -EINVAL;
     } 
     
-	printf("<vfs_i2c_read()\r\n");
+	//printf("<vfs_i2c_read()\r\n");
     return ret;
 }
 
 ssize_t vfs_i2c_write(file_t *fp, const void *buf, size_t nbytes)
 {
-	printf(">vfs_i2c_write()\r\n");
+	//printf(">vfs_i2c_write()\r\n");
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
     uint16_t dev_addr = 0;     /* dev address */
@@ -148,6 +149,6 @@ ssize_t vfs_i2c_write(file_t *fp, const void *buf, size_t nbytes)
         ret = -EINVAL;
     }
 	
-	printf("<vfs_i2c_write()\r\n");
+	//printf("<vfs_i2c_write()\r\n");
     return ret;
 }

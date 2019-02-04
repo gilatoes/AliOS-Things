@@ -65,10 +65,10 @@
 i2c_dev_t i2c_dev_test1 =
 {
     .port = 0,
-    .config.address_width = 6,
+    .config.address_width = 7 ,
     .config.freq = 400000,
     .config.mode = I2C_MODE_MASTER,
-    .config.dev_addr = (0x30<<1)
+    .config.dev_addr = (0x30)
 };
 
 typedef struct esp32_i2c_ctx {
@@ -78,11 +78,14 @@ typedef struct esp32_i2c_ctx {
 	uint32_t bitrate;
 }esp32_i2c_ctx_t;
 
-/* Varibale to indicate the re-entrant count of the i2c bus acquire function*/
+/* variable to indicate the re-entrant count of the i2c bus acquire function*/
 static volatile uint32_t g_entry_count = 0;
 
 /* Pointer to the current pal i2c context*/
 static pal_i2c_t * gp_pal_i2c_current_ctx;
+
+
+static int fd_i2c = 0;  
 
 /**********************************************************************************************************************
  * LOCAL ROUTINES
@@ -128,24 +131,21 @@ pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
 	if ((p_i2c_context == NULL) || (p_i2c_context->p_i2c_hw_config == NULL))
 		return PAL_STATUS_FAILURE;
 
-	char* i2c_path = "/dev/i2c/";
-    int fd_i2c = 0;    
+	char* i2c_path = "/dev/i2c/";      
     int i = 0;
     int ret = -1;
 	int res = 0;
-	uint8_t write_buf[10] = {0,1,2,3,4,5,6,7,8,9};
-	uint8_t read_buf[10] = {0};
+	//uint8_t write_buf[10] = {0,1,2,3,4,5,6,7,8,9};
+	//uint8_t read_buf[10] = {0};
 
 	master_ctx = (esp32_i2c_ctx_t*)p_i2c_context->p_i2c_hw_config;
 
 	i2c_dev_test1.port =  master_ctx->port;
 
-	i2c_dev_test1.config.dev_addr = (esp32_i2c_ctx_t*)p_i2c_context->slave_address;
+	//i2c_dev_test1.config.dev_addr = master_ctx->slave_address;
 	i2c_dev_test1.config.freq = master_ctx->bitrate;
 
-	printf("port=%d\r\n", i2c_dev_test1.port );
-	printf("addr=%d\r\n", i2c_dev_test1.config.dev_addr );
-	printf("freq=%d\r\n", i2c_dev_test1.config.freq);
+	printf("pal_i2c_init: port=%d addr=0x%x freq=%d\r\n", i2c_dev_test1.port, i2c_dev_test1.config.dev_addr, i2c_dev_test1.config.freq);
 
 	 /* i2c_ops is a structure in vfs_i2c.c */
     ret = aos_register_driver(i2c_path, &i2c_ops, &i2c_dev_test1);
@@ -153,7 +153,7 @@ pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
 		printf("failed to register i2c driver, ret=%d\r\n", ret);
 	}
     
-	printf("Open i2c:\r\n");
+	printf("pal_i2c_init: calling aos_open()\r\n");
     fd_i2c = aos_open(i2c_path,0);
 	if(ret!=VFS_SUCCESS){
 		printf("failed to open i2c driver, ret=%d\r\n", ret);
@@ -203,15 +203,25 @@ pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
  */
 pal_status_t pal_i2c_deinit(const pal_i2c_t* p_i2c_context)
 {
+	int ret=0;
+
 	printf(">pal_i2c_deinit()\r\n");
-#if 0	
+
 	esp32_i2c_ctx_t* master_ctx;
 	
 	if ((p_i2c_context == NULL) || (p_i2c_context->p_i2c_hw_config == NULL))
 		return PAL_STATUS_FAILURE;
 	
 	master_ctx = (esp32_i2c_ctx_t*)p_i2c_context->p_i2c_hw_config;
-	
+
+	printf("Close i2c:\r\n");
+	ret = aos_close(fd_i2c);
+	if(ret!=VFS_SUCCESS){
+		printf("failed to close i2c driver, ret=%d\r\n", ret);
+	}
+	printf("<i2c_test()\r\n");
+
+#if 0		
 	i2c_driver_delete(master_ctx->port);
 #endif
 	printf("<pal_i2c_deinit()\r\n");
@@ -255,10 +265,19 @@ pal_status_t pal_i2c_deinit(const pal_i2c_t* p_i2c_context)
 pal_status_t pal_i2c_write(pal_i2c_t* p_i2c_context,uint8_t* p_data , uint16_t length)
 {
 
-//#Always return success for now.
-pal_status_t status = PAL_STATUS_SUCCESS;
-printf(">pal_i2c_write()\r\n");
-#if 0
+	int ret=0;
+	//#Always return success for now.
+	//pal_status_t status = PAL_STATUS_SUCCESS;
+	//printf(">pal_i2c_write()\r\n");
+
+	int len = length;
+	
+	printf("data(%d):\r\n",length);
+	for(int i=0;i<length;i++){
+		printf("0x%x ", p_data[i]);
+	}
+	printf("\r\n");
+
     pal_status_t status = PAL_STATUS_FAILURE;
 	app_event_handler_t upper_layer_handler;
 	int i2c_master_port;
@@ -272,6 +291,19 @@ printf(">pal_i2c_write()\r\n");
 	master_ctx = (esp32_i2c_ctx_t*)p_i2c_context->p_i2c_hw_config;
 	i2c_master_port = master_ctx->port;
 
+	//printf("************* aos_write():\r\n");
+	//When writing, the value return is the number of byte successfully written.
+    ret = aos_write(fd_i2c, p_data, length);
+
+	if((ret==0) || (ret == -1 ))
+	{
+		printf("pal_i2c_write: failed to write to i2c device ret=%d\r\n",ret);
+		
+	}else{
+		printf("pal_i2c_write: written %d bytes to I2C device\r\n", ret);
+	}
+
+#if 0
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
     i2c_master_start(cmd);
@@ -280,17 +312,19 @@ printf(">pal_i2c_write()\r\n");
     i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(i2c_master_port, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
-
+#endif
 	upper_layer_handler = (app_event_handler_t)gp_pal_i2c_current_ctx->upper_layer_event_handler;
 
-	if (ret == ESP_OK) {
+	if((ret==0) || (ret == -1)){
+		//printf("Error. Inform upper layer\r\n");
+        upper_layer_handler(p_i2c_context->upper_layer_ctx , PAL_I2C_EVENT_ERROR);
+	}else{
+		//printf("Success call upper layer\r\n");
 		upper_layer_handler(p_i2c_context->upper_layer_ctx , PAL_I2C_EVENT_SUCCESS);
 		status = PAL_STATUS_SUCCESS;
-	} else {
-        upper_layer_handler(p_i2c_context->upper_layer_ctx , PAL_I2C_EVENT_ERROR);
 	}
-#endif
-	printf("<pal_i2c_write()\r\n");
+
+	//printf("<pal_i2c_write()\r\n");
     return status;
 }
 
@@ -327,10 +361,12 @@ printf(">pal_i2c_write()\r\n");
  */
 pal_status_t pal_i2c_read(pal_i2c_t* p_i2c_context , uint8_t* p_data , uint16_t length)
 {
+	int ret=0;
+
 	//#Always return success for now.
-pal_status_t status = PAL_STATUS_SUCCESS;
-printf(">pal_i2c_write()\r\n");
-#if 0
+//pal_status_t status = PAL_STATUS_SUCCESS;
+//printf(">pal_i2c_read() length=%d\r\n",length);
+
     pal_status_t status = PAL_STATUS_FAILURE;
     app_event_handler_t upper_layer_handler;
 	int i2c_master_port;
@@ -344,11 +380,18 @@ printf(">pal_i2c_write()\r\n");
 	if ((p_i2c_context == NULL) || (p_i2c_context->p_i2c_hw_config == NULL))
 		return status;
 	
-
-
 	master_ctx = (esp32_i2c_ctx_t*)p_i2c_context->p_i2c_hw_config;
 	i2c_master_port = master_ctx->port;
+
+	ret = aos_read(fd_i2c, p_data, length);
+
+	if(ret == -1 ){
+		//printf("pal_i2c_read: failed to read from i2c device ret=%d\r\n",ret);
+	}else{
+		printf("read bytes ok length=%d ret=%d\r\n", length, ret);
+	}
 	
+#if 0	
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, ( p_i2c_context->slave_address << 1 ) | READ_BIT, ACK_CHECK_EN);
@@ -359,17 +402,18 @@ printf(">pal_i2c_write()\r\n");
     i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(i2c_master_port, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
-	
+#endif
+
     upper_layer_handler = (app_event_handler_t)gp_pal_i2c_current_ctx->upper_layer_event_handler;
 	
-	if (ret == ESP_OK) {
-		upper_layer_handler(p_i2c_context->upper_layer_ctx , PAL_I2C_EVENT_SUCCESS);
-		status = PAL_STATUS_SUCCESS;
+	if((ret==0) || (ret == -1 )){
+		upper_layer_handler(p_i2c_context->upper_layer_ctx , PAL_I2C_EVENT_ERROR);
 	} else {
-        upper_layer_handler(p_i2c_context->upper_layer_ctx , PAL_I2C_EVENT_ERROR);
+        upper_layer_handler(p_i2c_context->upper_layer_ctx , PAL_I2C_EVENT_SUCCESS);
+		status = PAL_STATUS_SUCCESS;
 	}
-#endif	    
-	printf(">pal_i2c_write()\r\n");
+    
+	//printf(">pal_i2c_read()\r\n");
 	return status;
 
 }
