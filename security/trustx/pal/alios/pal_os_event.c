@@ -37,12 +37,9 @@
 #include "pal_os_event.h"
 #include "pal.h"
 #include "stdio.h"
-
 #include <aos/kernel.h>
 #include <aos/aos.h>
-
 #include <hal/soc/timer.h>
-
 #include <k_api.h> //rhino API
 
 /**********************************************************************************************************************
@@ -142,7 +139,6 @@ static void recv_queue_and_callback_task(void *arg)
 		{
 			printf("Invalid queue ret=%d\r\n", ret);
 		}
-		//printf("?");
 		ret = aos_queue_recv(&callback_queue, AOS_WAIT_FOREVER, &clb_params, &size);
 		if(ret != 0 )
 		{			
@@ -151,7 +147,6 @@ static void recv_queue_and_callback_task(void *arg)
 		}else{			
 			//Process the callbacks		
 			if (clb_params.clb != NULL){
-					//printf("@@\r\n");
 					func = clb_params.clb;
 					func_args = clb_params.clb_ctx; 
 					func((void*)func_args);
@@ -182,7 +177,6 @@ pal_status_t pal_os_event_init(void)
 	//printf(">pal_os_event_init()\r\n");
 	//printf("Start task name: %s\r\n", aos_task_name());
 
-	//printf("create new callback queue\r\n");
 	ret = aos_queue_new(&callback_queue, queue_buf, TEST_CONFIG_QUEUE_BUF_SIZE, TEST_CONFIG_QUEUE_BUF_SIZE);	
 	if(ret>0)
 	{
@@ -190,15 +184,14 @@ pal_status_t pal_os_event_init(void)
 	}
 
 	//动态创建一个任务，任务句柄不返回，创建完后自动运行； 采用默认优先级AOS_DEFAULT_APP_PRI（32） 受宏RHINO_CONFIG_KOBJ_DYN_ALLOC开关控制
-	//printf("create new task\r\n");
     ret = aos_task_new("recv_queue_and_callback_task", recv_queue_and_callback_task, NULL, stack_size);
 	if(ret>0)
 	{
 		printf("failed to create new task\r\n");
 	}
 
-	//动态创建软件定时器
 #if 0	
+    //动态创建软件定时器
 	printf("create timer\r\n");
 	ret = aos_timer_new(&callback_timer, time_elapsed_handler, NULL, 100, 0);
 	
@@ -241,14 +234,12 @@ void pal_os_event_register_callback_oneshot(register_callback callback,
 	CPSR_ALLOC();
 
 	RHINO_CRITICAL_ENTER();
-	//printf("Start timer \r\n");
 	ret = aos_timer_new(&callback_timer, time_elapsed_handler, NULL, time_us/1000, 0);	
 	if(ret != 0)
 	{
 		printf("Error: failed to create timer ret=%d \r\n", ret);
 	}
 	else{
-		//printf("Register the callback to global memory \r\n");
 		//Register the callback function and arguments
 		clbs[0].clb = callback;
     	clbs[0].clb_ctx = callback_args;

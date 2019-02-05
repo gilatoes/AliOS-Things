@@ -35,15 +35,12 @@
  *********************************************************************************************************************/
 #include <stdio.h>
 #include "pal_i2c.h"
-//#TODO
-//#include "driver/i2c.h"
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_register.h>
 #include <vfs_i2c.h>
 
 #include <hal/soc/i2c.h>
-
 
 /**********************************************************************************************************************
  * MACROS
@@ -62,7 +59,7 @@
 /*********************************************************************************************************************
  * LOCAL DATA
  *********************************************************************************************************************/
-i2c_dev_t i2c_dev_test1 =
+i2c_dev_t TrustX_I2C_Dev =
 {
     .port = 0,
     .config.address_width = 7 ,
@@ -122,10 +119,8 @@ static int fd_i2c = 0;
 pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
 {
 	int master_port;
-#if 1
 	esp32_i2c_ctx_t* master_ctx;
-	//i2c_config_t conf;
-#endif	
+
 	//printf(">pal_i2c_init()\r\n");
 
 	if ((p_i2c_context == NULL) || (p_i2c_context->p_i2c_hw_config == NULL))
@@ -135,21 +130,19 @@ pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
     int i = 0;
     int ret = -1;
 	int res = 0;
-	//uint8_t write_buf[10] = {0,1,2,3,4,5,6,7,8,9};
-	//uint8_t read_buf[10] = {0};
 
 	master_ctx = (esp32_i2c_ctx_t*)p_i2c_context->p_i2c_hw_config;
 
-	i2c_dev_test1.port =  master_ctx->port;
+	TrustX_I2C_Dev.port =  master_ctx->port;
 
-	//i2c_dev_test1.config.dev_addr = master_ctx->slave_address;
-	i2c_dev_test1.config.freq = master_ctx->bitrate;
+	//TrustX_I2C_Dev.config.dev_addr = master_ctx->slave_address;
+	TrustX_I2C_Dev.config.freq = master_ctx->bitrate;
 
-	//printf("pal_i2c_init: port=%d addr=0x%x freq=%d\r\n", i2c_dev_test1.port, i2c_dev_test1.config.dev_addr, i2c_dev_test1.config.freq);
+	//printf("pal_i2c_init: port=%d addr=0x%x freq=%d\r\n", TrustX_I2C_Dev.port, TrustX_I2C_Dev.config.dev_addr, TrustX_I2C_Dev.config.freq);
 
 	 /* i2c_ops is a structure in vfs_i2c.c */
-    ret = aos_register_driver(i2c_path, &i2c_ops, &i2c_dev_test1);
-	if(ret!=VFS_SUCCESS){
+    ret = aos_register_driver(i2c_path, &i2c_ops, &TrustX_I2C_Dev);
+	if(ret!=VFS_SUCCESS){ 
 		printf("failed to register i2c driver, ret=%d\r\n", ret);
 	}
     
@@ -159,22 +152,6 @@ pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
 		printf("failed to open i2c driver, ret=%d\r\n", ret);
 	}
     
-
-#if 0	
-	master_ctx = (esp32_i2c_ctx_t*)p_i2c_context->p_i2c_hw_config;
-	master_port = master_ctx->port;
-    conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = master_ctx->sda_io;
-    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.scl_io_num = master_ctx->scl_io;
-    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.master.clk_speed = master_ctx->bitrate;
-    i2c_param_config(master_port, &conf);
-    i2c_driver_install(master_port, conf.mode,
-                       PAL_I2C_MASTER_TX_BUF_DISABLE,
-                       PAL_I2C_MASTER_RX_BUF_DISABLE, 0);
-#endif
-
     //printf("<pal_i2c_init()\r\n");
     return PAL_STATUS_SUCCESS;
 }
@@ -205,7 +182,7 @@ pal_status_t pal_i2c_deinit(const pal_i2c_t* p_i2c_context)
 {
 	int ret=0;
 
-	printf(">pal_i2c_deinit()\r\n");
+	//printf(">pal_i2c_deinit()\r\n");
 
 	esp32_i2c_ctx_t* master_ctx;
 	
@@ -214,17 +191,13 @@ pal_status_t pal_i2c_deinit(const pal_i2c_t* p_i2c_context)
 	
 	master_ctx = (esp32_i2c_ctx_t*)p_i2c_context->p_i2c_hw_config;
 
-	printf("Close i2c:\r\n");
+	//printf("Close i2c:\r\n");
 	ret = aos_close(fd_i2c);
 	if(ret!=VFS_SUCCESS){
 		printf("failed to close i2c driver, ret=%d\r\n", ret);
 	}
-	printf("<i2c_test()\r\n");
 
-#if 0		
-	i2c_driver_delete(master_ctx->port);
-#endif
-	printf("<pal_i2c_deinit()\r\n");
+	//printf("<pal_i2c_deinit()\r\n");
 
     return PAL_STATUS_SUCCESS;
 }

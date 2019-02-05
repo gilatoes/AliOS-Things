@@ -137,6 +137,7 @@ static int32_t optiga_init(void)
 		if(OPTIGA_LIB_SUCCESS != status)
 		{
 			printf("Failure: CmdLib_OpenApplication(): 0x%04X\n\r", status);
+			optiga_comms_close(&optiga_comms);
 			break;
 		}
 
@@ -160,13 +161,11 @@ int application_start(int argc, char *argv[])
 {       
 	int ret = -1;
 
-    LOG(">application started()");
-    printf("Trust X Library:%s\r\n", VERSION_HOST_LIBRARY);
-	printf("*************************************\n");
+	printf("****************************************************\n");
+	printf("Trust X AliOS Things Driver version: %s\n", VERSION_HOST_LIBRARY);
 	printf("Compiled time: %s %s\n", __DATE__, __TIME__);
-	printf("*************************************\n");
-
-	printf("Task name: %s\r\n", aos_task_name());
+	printf("Task name: %s\n", aos_task_name());
+	printf("****************************************************\n");
 
 #if (ENABLE_TIMER_TEST == 1)
 	timer_test();
@@ -190,7 +189,7 @@ int application_start(int argc, char *argv[])
 #endif	
 
 #if (ENABLE_TRUSTX_DRIVER ==1)
-	printf("Start Trust X driver\r\n");
+	//printf("Start Trust X AliOS Things driver\r\n\n");
 	gpio_init();
 	optiga_init();	
 
@@ -198,6 +197,7 @@ int application_start(int argc, char *argv[])
 	uint16_t  UID_length = 27;
 	printf("Trust X UID:\r\n");
 	optiga_util_read_data(eCOPROCESSOR_UID, 0, UID, &UID_length);
+	#if 0
 	for(int x=0; x<27;)
 	{
 		if(x!=24){
@@ -209,6 +209,20 @@ int application_start(int argc, char *argv[])
 		}
 		x+=4;
 	}
+	#endif 
+    printf("CIM Identifier:\t\t%2X\r\n", UID[0]); 
+    printf("Platform Identifier:\t%2X\r\n", UID[1]);
+    printf("Model Identifier:\t%.2X\r\n", UID[2]);
+    printf("ID of ROM mask:\t\t%.2X %.2X\r\n",UID[3], UID[4]);
+    printf("Chip type:\t\t%.2X %.2X %.2X %.2X %.2X %.2X\r\n", UID[5], UID[6],UID[7], UID[8],UID[9], UID[10]);
+    printf("Batch Number:\t\t%.2X %.2X %.2X %.2X %.2X %.2X\r\n", UID[11], UID[12],UID[13], UID[14],UID[15], UID[16]);
+    printf("Position X:\t\t%.2X %.2X\r\n", UID[17], UID[18]);
+    printf("Position Y:\t\t%.2X %.2X\r\n", UID[19], UID[20]); 
+    printf("Firmware Identifier:\t%.2X %.2X %.2X %.2X\r\n", UID[21], UID[22], UID[23], UID[24]);
+    printf("ESW Build number:\t%.2X %.2X\r\n", UID[25], UID[26]);
+
+	//Close TrustX I2C comms
+	optiga_comms_close(&optiga_comms);
 
 #endif
 

@@ -112,7 +112,6 @@ static void i2c_config_ctr(i2c_dev_t * handle,uint32_t clk)
     handle->ctr.scl_force_out = 1;
     handle->ctr.sample_scl_level = 0;
     handle->fifo_conf.nonfifo_en = 0;
-    //handle->timeout.tout = cycle * 8;
 	handle->timeout.tout = 32000; //cycle * 8;
     handle->sda_hold.time = half_cycle / 2;
     handle->sda_sample.time = half_cycle / 2;
@@ -335,74 +334,6 @@ static int32_t i2c_read_bytes(i2c_dev_t * handle,uint16_t addr,int8_t add_width,
     //printf("<i2c_read_bytes()");
     return -1;
 }
-/*
-static int32_t i2c_read_bytes(i2c_dev_t * handle,uint16_t addr,int8_t add_width,uint8_t * buff,uint32_t len,int8_t need_stop)
-{
-	printf(">i2c_read_bytes()\r\n");
-    if(NULL == handle || NULL == buff || len == 0) {
-        return(-1);
-    }
-    if(i2c_check_busy(handle)) {
-        return(-1);
-    }
-    uint8_t is_run = 1;
-    uint8_t index = 0;
-    uint8_t nextCmdCount = 0;
-    uint8_t currentCmdIdx = 0;
-    uint8_t cmd_index = 0;
-    uint16_t dev_addr = (addr << 1) | 1;
-    i2c_start_prepare(handle);
-    i2c_config_cmd(handle,cmd_index,I2C_CMD_RSTART,0,false,false,false);
-    cmd_index = (cmd_index+1)%I2C_CMD_MAX;
-    i2c_send_addr(handle,0,dev_addr,add_width);
-    i2c_config_cmd(handle,cmd_index,I2C_CMD_WRITE,add_width?2:1,true,false,false);
-    cmd_index = (cmd_index+1)%I2C_CMD_MAX;
-    nextCmdCount = cmd_index;
-    handle->ctr.trans_start = 1;
-    while(is_run) {
-        uint32_t startAt = krhino_sys_time_get();
-        do {
-
-            if(0 != i2c_check_status(handle)) {
-                return (-1);
-            }
-
-            if(handle->command[currentCmdIdx].done) {
-                nextCmdCount--;
-                if (handle->command[currentCmdIdx].op_code == I2C_CMD_READ) {
-                    if(currentCmdIdx >= 2) {
-                        buff[index++] = handle->fifo_data.val & 0xFF;
-                    }
-                    handle->fifo_conf.tx_fifo_rst = 1;
-                    handle->fifo_conf.tx_fifo_rst = 0;
-                    handle->fifo_conf.rx_fifo_rst = 1;
-                    handle->fifo_conf.rx_fifo_rst = 0;
-                } else if (handle->command[currentCmdIdx].op_code == I2C_CMD_STOP) {
-                    is_run = 0;
-                    break;
-                }
-                currentCmdIdx = (currentCmdIdx+1)%I2C_CMD_MAX;
-                if(nextCmdCount < 2) {
-                    if(len > 0) {
-                        i2c_config_cmd(handle, cmd_index, I2C_CMD_READ, 1, false, false, (len==1));
-                        cmd_index = (cmd_index+1)%I2C_CMD_MAX;
-                        nextCmdCount++;
-                        len -= 1;
-                    } else {
-                        i2c_config_cmd(handle, cmd_index, I2C_CMD_STOP, 0, false, false, false);
-                        cmd_index = (cmd_index+1)%I2C_CMD_MAX;
-                        nextCmdCount++;
-                    }
-                }
-                break;
-            }
-        } while(krhino_sys_time_get() - startAt < 20);
-    }
-
-	printf("<i2c_read_bytes()\r\n");
-    return (0);
-}
-*/
 
 int32_t hal_i2c_init(aos_i2c_dev_t *i2c)
 {
@@ -428,7 +359,6 @@ int32_t hal_i2c_master_send(aos_i2c_dev_t *i2c, uint16_t dev_addr, const uint8_t
         return (-1);
     }
     i2c_resource_t * resource = &g_dev[i2c->port];
-    //uint16_t addr = dev_addr >> 1;
     //printf("addr=0x%x\r\n", dev_addr);
     ret = i2c_write_bytes(resource->dev,dev_addr,i2c->config.address_width == I2C_MEM_ADDR_SIZE_16BIT,data,size, 1, timeout);
 	
@@ -444,23 +374,21 @@ int32_t hal_i2c_master_recv(aos_i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data
         return (-1);
     }
     i2c_resource_t * resource = &g_dev[i2c->port];
-    //uint16_t addr = dev_addr >> 1;
     ret = i2c_read_bytes(resource->dev,dev_addr,i2c->config.address_width == I2C_MEM_ADDR_SIZE_16BIT,data,size,1, timeout);
 	
 	//printf("<hal_i2c_master_recv()\r\n");
-
     return ret;
 }
 int32_t hal_i2c_master_recv_bulk(aos_i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data,uint16_t size, uint32_t timeout)
 {
-    printf(">hal_i2c_master_recv_bulk()\r\n");
+    //printf(">hal_i2c_master_recv_bulk()\r\n");
     if(NULL == i2c || (I2C_NUM_0 != i2c->port)&&(I2C_NUM_1 != i2c->port)) {
         return (-1);
     }
     i2c_resource_t * resource = &g_dev[i2c->port];
     int32_t ret = i2c_read_bytes(resource->dev,dev_addr,i2c->config.address_width == I2C_MEM_ADDR_SIZE_16BIT,data,size,1,timeout);
 
-    printf("<hal_i2c_master_recv_bulk()\r\n");
+    //printf("<hal_i2c_master_recv_bulk()\r\n");
     return ret;
 }
 

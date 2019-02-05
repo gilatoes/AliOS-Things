@@ -35,16 +35,7 @@
  *********************************************************************************************************************/
 #include "pal_gpio.h"
 #include "pal_i2c.h"
-//#TODO
 #include "hal/soc/soc.h"
-
-//#include "driver/i2c.h"
-//#include "hal/soc/i2c.h"
-//#include "driver/periph_ctrl.h"
-//#include "soc/i2c_reg.h"
-//#include "soc/i2c_struct.h"
-//#include "soc/dport_reg.h"
-//#include "driver/gpio.h"
 
 /*********************************************************************************************************************
  * pal ifx i2c instance

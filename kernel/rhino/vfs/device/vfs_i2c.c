@@ -48,7 +48,7 @@ int vfs_i2c_open(inode_t *inode, file_t *fp)
 
 int vfs_i2c_close(file_t *fp)
 {
-	printf(">vfs_i2c_close()\r\n");
+	//printf(">vfs_i2c_close()\r\n");
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
 
@@ -74,7 +74,7 @@ int vfs_i2c_close(file_t *fp)
     } else {
         ret = -EINVAL;
     }
-	printf("<vfs_i2c_close()\r\n");
+	//printf("<vfs_i2c_close()\r\n");
 
     return ret;
 }
