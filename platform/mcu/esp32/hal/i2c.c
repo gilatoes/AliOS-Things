@@ -101,10 +101,10 @@ static int8_t i2c_config_pin(int32_t port,uint32_t sda_num,uint32_t scl_num)
 
 static void i2c_config_ctr(i2c_dev_t * handle,uint32_t clk)
 {
-	printf(">i2c_config_ctr()\r\n");
+	//printf(">i2c_config_ctr()\r\n");
     int32_t cycle = (APB_CLK_FREQ / clk);    
     int32_t half_cycle = cycle / 2;
-    printf("cycle=%d half-cycle=%d\r\n", cycle, half_cycle);
+    //printf("cycle=%d half-cycle=%d\r\n", cycle, half_cycle);
     handle->ctr.rx_lsb_first = 0;
     handle->ctr.tx_lsb_first = 0;
     handle->ctr.ms_mode = 1; //master==1;0==slave
@@ -122,7 +122,7 @@ static void i2c_config_ctr(i2c_dev_t * handle,uint32_t clk)
     handle->scl_rstart_setup.time = half_cycle;
     handle->scl_stop_hold.time = half_cycle;
     handle->scl_stop_setup.time = half_cycle;
-	printf("<i2c_config_ctr()\r\n");
+	//printf("<i2c_config_ctr()\r\n");
 
 }
 
@@ -406,7 +406,7 @@ static int32_t i2c_read_bytes(i2c_dev_t * handle,uint16_t addr,int8_t add_width,
 
 int32_t hal_i2c_init(aos_i2c_dev_t *i2c)
 {
-	printf("<hal_i2c_init()\r\n");
+	//printf("<hal_i2c_init()\r\n");
     int32_t ret = 0;
     if(NULL == i2c || (I2C_NUM_0 != i2c->port)&&(I2C_NUM_1 != i2c->port)) {
         return (-1);
@@ -415,7 +415,7 @@ int32_t hal_i2c_init(aos_i2c_dev_t *i2c)
     i2c_config_pin(i2c->port,resource->sda_io,resource->scl_io);
     i2c_config_ctr(resource->dev,i2c->config.freq);
 	
-	printf("<hal_i2c_init()\r\n");
+	//printf("<hal_i2c_init()\r\n");
 
     return ret;
 }

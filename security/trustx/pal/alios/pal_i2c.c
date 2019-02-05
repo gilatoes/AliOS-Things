@@ -126,7 +126,7 @@ pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
 	esp32_i2c_ctx_t* master_ctx;
 	//i2c_config_t conf;
 #endif	
-	printf(">pal_i2c_init()\r\n");
+	//printf(">pal_i2c_init()\r\n");
 
 	if ((p_i2c_context == NULL) || (p_i2c_context->p_i2c_hw_config == NULL))
 		return PAL_STATUS_FAILURE;
@@ -145,7 +145,7 @@ pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
 	//i2c_dev_test1.config.dev_addr = master_ctx->slave_address;
 	i2c_dev_test1.config.freq = master_ctx->bitrate;
 
-	printf("pal_i2c_init: port=%d addr=0x%x freq=%d\r\n", i2c_dev_test1.port, i2c_dev_test1.config.dev_addr, i2c_dev_test1.config.freq);
+	//printf("pal_i2c_init: port=%d addr=0x%x freq=%d\r\n", i2c_dev_test1.port, i2c_dev_test1.config.dev_addr, i2c_dev_test1.config.freq);
 
 	 /* i2c_ops is a structure in vfs_i2c.c */
     ret = aos_register_driver(i2c_path, &i2c_ops, &i2c_dev_test1);
@@ -153,7 +153,7 @@ pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
 		printf("failed to register i2c driver, ret=%d\r\n", ret);
 	}
     
-	printf("pal_i2c_init: calling aos_open()\r\n");
+	//printf("pal_i2c_init: calling aos_open()\r\n");
     fd_i2c = aos_open(i2c_path,0);
 	if(ret!=VFS_SUCCESS){
 		printf("failed to open i2c driver, ret=%d\r\n", ret);
@@ -175,7 +175,7 @@ pal_status_t pal_i2c_init(const pal_i2c_t* p_i2c_context)
                        PAL_I2C_MASTER_RX_BUF_DISABLE, 0);
 #endif
 
-    printf("<pal_i2c_init()\r\n");
+    //printf("<pal_i2c_init()\r\n");
     return PAL_STATUS_SUCCESS;
 }
 
@@ -272,11 +272,13 @@ pal_status_t pal_i2c_write(pal_i2c_t* p_i2c_context,uint8_t* p_data , uint16_t l
 
 	int len = length;
 	
+#if 0
 	printf("data(%d):\r\n",length);
 	for(int i=0;i<length;i++){
 		printf("0x%x ", p_data[i]);
 	}
 	printf("\r\n");
+#endif
 
     pal_status_t status = PAL_STATUS_FAILURE;
 	app_event_handler_t upper_layer_handler;
@@ -295,6 +297,7 @@ pal_status_t pal_i2c_write(pal_i2c_t* p_i2c_context,uint8_t* p_data , uint16_t l
 	//When writing, the value return is the number of byte successfully written.
     ret = aos_write(fd_i2c, p_data, length);
 
+#if 0
 	if((ret==0) || (ret == -1 ))
 	{
 		printf("pal_i2c_write: failed to write to i2c device ret=%d\r\n",ret);
@@ -302,6 +305,7 @@ pal_status_t pal_i2c_write(pal_i2c_t* p_i2c_context,uint8_t* p_data , uint16_t l
 	}else{
 		printf("pal_i2c_write: written %d bytes to I2C device\r\n", ret);
 	}
+#endif
 
 #if 0
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
@@ -384,13 +388,14 @@ pal_status_t pal_i2c_read(pal_i2c_t* p_i2c_context , uint8_t* p_data , uint16_t 
 	i2c_master_port = master_ctx->port;
 
 	ret = aos_read(fd_i2c, p_data, length);
-
+#if 0
 	if(ret == -1 ){
-		//printf("pal_i2c_read: failed to read from i2c device ret=%d\r\n",ret);
+		printf("pal_i2c_read: failed to read from i2c device ret=%d\r\n",ret);
 	}else{
 		printf("read bytes ok length=%d ret=%d\r\n", length, ret);
 	}
-	
+#endif
+
 #if 0	
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
@@ -449,8 +454,8 @@ pal_status_t pal_i2c_read(pal_i2c_t* p_i2c_context , uint8_t* p_data , uint16_t 
  */
 pal_status_t pal_i2c_set_bitrate(const pal_i2c_t* p_i2c_context , uint16_t bitrate)
 {
-	printf(">pal_i2c_set_bitrate()\r\n");
-	printf("<pal_i2c_set_bitrate()\r\n");
+	//printf(">pal_i2c_set_bitrate()\r\n");
+	//printf("<pal_i2c_set_bitrate()\r\n");
     return PAL_STATUS_SUCCESS;
 }
 

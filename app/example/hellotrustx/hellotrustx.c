@@ -97,7 +97,7 @@ static int32_t optiga_init(void)
 {
 	int32_t status = (int32_t) OPTIGA_LIB_ERROR;
 
-	printf(">optiga_init()\r\n");
+	//printf(">optiga_init()\r\n");
 
 	do
 	{
@@ -107,7 +107,7 @@ static int32_t optiga_init(void)
 		}
 		
 		pal_os_timer_delay_in_milliseconds(5);
-		printf("pal_os_event_init completed\r\n");
+		//printf("pal_os_event_init completed\r\n");
 
 		//Invoke optiga_comms_open to initialize the IFX I2C Protocol and security chip
 		optiga_comms_status = OPTIGA_COMMS_BUSY;
@@ -143,7 +143,7 @@ static int32_t optiga_init(void)
 		status = OPTIGA_LIB_SUCCESS;
 	} while(0);
 
-	printf("<optiga_init()\r\n");
+	//printf("<optiga_init()\r\n");
 
 	return status;
 }
