@@ -34,6 +34,9 @@ static i2c_resource_t g_dev[I2C_NUM_MAX] = {
 };
 ```
 
+## ESP32 Hardware schematic and PCB design
+https://easyeda.com/gilatoes/esp32-with-trust-x
+
 ## Software setup
 
 AliOS Things SDK supports multiple environment such as Windows and Linux. For this GitHub repository, the focus is only on Windows environment with Visual Studio Code.
