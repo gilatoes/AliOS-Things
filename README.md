@@ -1,6 +1,7 @@
 # AliOS Things with ESP32-DekitC and OPTIGA Trust X
 
-This Github repository works on ESP32-DevKitC with AliOS Things release 2.0.0. Infineon Trust X device is installed as a I2C hardware cryptographic device within AliOS Things OS.
+This Github repository works on ESP32-DevKitC and M5Stack with AliOS Things release 2.0.0.
+Infineon Trust X device is installed as a I2C hardware cryptographic device within AliOS Things OS.
 
 ## Getting Started
 
@@ -17,6 +18,7 @@ From the top-most layer, the application example known as HelloTrustX is a sampl
 ## Hardware configuration and setup
 
 Trust X is connected to ESP32-DevKitC power supply, I2C interface and GPIO for software reset.
+**Note:** DEfault AliOS I2C port is not using the standard Wire SCL and SDA. Change i2c.c file below. Otherwise, wire the I2C according to AliOS default configuration.
 
 |ESP32 | Trust X Signal Name|
 |---|:---:|
@@ -34,40 +36,11 @@ static i2c_resource_t g_dev[I2C_NUM_MAX] = {
 };
 ```
 
-## ESP32 Hardware schematic and PCB design
-https://easyeda.com/gilatoes/esp32-with-trust-x
-
-## Software setup
-
-AliOS Things SDK supports multiple environment such as Windows and Linux. For this GitHub repository, the focus is only on Windows environment with Visual Studio Code.
-
-Refer to AliOS Things Studio setup:
-https://github.com/alibaba/AliOS-Things/wiki/AliOS-Things-Studio
-
-## Additional configuration settings
-## Configuration of Intellisense for Visual Studio in c_cpp_properties.json
-```
-{
-    "configurations": [
-        {
-            "name": "Win32",
-            "includePath": [
-                "C:\\Users\\<user>\\<path>\\AliOS-Things\\**"
-            ],
-            "forcedInclude": [],
-            "intelliSenseMode": "msvc-x64"
-        }
-    ],
-    "version": 4
-}
-```
-
-
-## ESP32 Upload configuration
-<code_base>\build\site_scons\upload\esp32.json
-
+## Serial Communication setting
+Edit the serial communication port number at <AliOS-Things>\build\site_scons\upload\esp32.json
 Change @PORT@ to esp32 COM#.
 
+Sample configuration file:
 ```
 {
     "cmd": [
@@ -99,6 +72,40 @@ Change @PORT@ to esp32 COM#.
     ]
 }
 ```
+## ESP32 Hardware schematic and PCB design
+https://easyeda.com/gilatoes/esp32-with-trust-x
+
+## Software setup
+
+AliOS Things SDK supports multiple environment such as Windows and Linux. For this GitHub repository, the focus is only on Windows environment with Visual Studio Code.
+
+Refer to AliOS Things Studio setup:
+https://github.com/alibaba/AliOS-Things/wiki/AliOS-Things-Studio
+
+## Additional configuration settings
+## Configuration of Intellisense for Visual Studio in c_cpp_properties.json
+```
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "C:\\Users\\<user>\\<path>\\AliOS-Things\\**"
+            ],
+            "forcedInclude": [],
+            "intelliSenseMode": "msvc-x64"
+        }
+    ],
+    "version": 4
+}
+```
+## ESP32 Platform entry
+
+For ESP32 platform entry code is located as follows:
+<ALiOS-Things>platform\mcu\esp32\bsp\entry.
+
+**Note:** that wifi is not enabled in the code.
+
 
 ## Sample Output:
 ```

@@ -4,7 +4,7 @@
     "aliosStudio.name": "hellotrustx",
     "aliosStudio.isAosSource": true,
     "aliosStudio.sdkPath": "${workspaceRoot}",
-    "aliosStudio.comPort": "COM8",
+    "aliosStudio.comPort": "COM72",
     "aliosStudio.hardware.baudrate": 115200,
     "files.associations": {
         "pal.h": "c",

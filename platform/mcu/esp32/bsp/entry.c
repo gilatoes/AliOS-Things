@@ -72,7 +72,7 @@ extern void os_set_int_muticore(int n);
 void app_main(void)
 {
     
-    initialise_wifi();
+    //initialise_wifi();
 	hal_uart_init(&uart_0);
 
     #if (RHINO_CONFIG_CPU_NUM > 1)

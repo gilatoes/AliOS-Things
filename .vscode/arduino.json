@@ -1,6 +1,6 @@
 {
     "board": "Infineon:arm:XMC1100_XMC2GO",
     "configuration": "UART=debug",
-    "port": "COM37",
-    "sketch": "..\\..\\..\\Documents\\Arduino\\libraries\\arduino-optiga-trust-x\\examples\\E01_HelloBootCamp\\E01_HelloBootCamp.ino"
+    "port": "COM72",
+    "sketch": "E03_GetUniqueID.ino"
 }

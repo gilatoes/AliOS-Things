@@ -4,7 +4,7 @@
         "--chip", 
         "esp32", 
         "--port", 
-        "COM8", 
+        "COM72", 
         "--baud", 
         "921600", 
         "--before", 
